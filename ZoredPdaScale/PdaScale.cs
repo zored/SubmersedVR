@@ -17,6 +17,7 @@ namespace ZoredPdaScale
             Scale = Config.Bind("PDA", "Scale", 2.0f, "PDA size multiplier. F7/F8 adjust it while playing.");
             harmony = new Harmony("zored.submersedvr.pdascale");
             harmony.PatchAll();
+            gameObject.AddComponent<DepthProbe>();
             Logger.LogInfo("PDA scaling enabled.");
         }
 

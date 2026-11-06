@@ -7,7 +7,7 @@ $game = (Resolve-Path -LiteralPath $GamePath).Path
 $managed = Join-Path $game 'Subnautica_Data\Managed'
 $core = Join-Path $game 'BepInEx\core'
 $pluginDir = Join-Path $game 'BepInEx\plugins'
-$source = Join-Path $PSScriptRoot 'ZoredPdaScale\PdaScale.cs'
+$sources = @(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'ZoredPdaScale') -Filter '*.cs' | ForEach-Object { $_.FullName })
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $buildDir = Join-Path $PSScriptRoot 'ZoredPdaScale\build'
 if (-not (Test-Path -LiteralPath (Join-Path $game 'Subnautica.exe'))) { throw 'Subnautica.exe not found.' }
@@ -19,10 +19,10 @@ $references = @(
     (Join-Path $core 'BepInEx.dll'), (Join-Path $core '0Harmony.dll'),
     (Join-Path $managed 'Assembly-CSharp.dll'), (Join-Path $managed 'Assembly-CSharp-firstpass.dll'),
     (Join-Path $managed 'UnityEngine.dll'), (Join-Path $managed 'UnityEngine.CoreModule.dll'),
-    (Join-Path $managed 'UnityEngine.InputLegacyModule.dll')
+    (Join-Path $managed 'UnityEngine.InputLegacyModule.dll'), (Join-Path $managed 'UnityEngine.UI.dll')
 )
 foreach ($reference in $references) { if (-not (Test-Path -LiteralPath $reference)) { throw "Missing reference: $reference" } }
-$compilerArgs = @('/nologo', '/target:library', "/out:$output") + @($references | ForEach-Object { "/reference:$_" }) + @($source)
+$compilerArgs = @('/nologo', '/target:library', "/out:$output") + @($references | ForEach-Object { "/reference:$_" }) + $sources
 & $compiler @compilerArgs
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed; existing installed plugin was left untouched.' }
 Write-Host "Built: $output"

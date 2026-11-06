@@ -10,3 +10,5 @@
 
 - After completing changes, commit and push them to branch `zored`; report whether the game needs restarting.
 - The player's preferred PDA scale was saved as 2.0 in BepInEx configuration.
+
+- F10 toggles an experimental GUI camera depth-clear change while the PDA is open. Its state is session-only; inspect the Zored PDA Depth log and validate hand occlusion in the headset before treating it as a fix.
