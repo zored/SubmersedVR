@@ -14,6 +14,19 @@ namespace ZoredPdaScale
         {
             if (!UnityEngine.Input.GetKeyDown(KeyCode.F10)) return;
             log.LogInfo("Snapshot begin");
+            var player = Player.main;
+            var gamePda = player == null ? null : player.GetPDA();
+            if (gamePda != null)
+            {
+                log.LogInfo("PDA object: " + gamePda.name + ", scale=" + gamePda.transform.localScale);
+                var anchor = gamePda.screenAnchor;
+                for (int i = 0; anchor != null && i < 8; i++, anchor = anchor.parent)
+                    log.LogInfo("PDA anchor ancestor " + i + ": " + anchor.name + ", scale=" + anchor.localScale);
+                var renderers = gamePda.GetComponentsInChildren<Renderer>(true);
+                foreach (var renderer in renderers)
+                    log.LogInfo("PDA renderer: " + renderer.name + ", type=" + renderer.GetType().Name + ", parent=" + (renderer.transform.parent == null ? "none" : renderer.transform.parent.name));
+                log.LogInfo("PDA renderer count: " + renderers.Length);
+            }
             foreach (var camera in Camera.allCameras)
             {
                 log.LogInfo("Camera " + camera.name + ": depth=" + camera.depth + ", clear=" + camera.clearFlags + ", mask=" + camera.cullingMask + ", stereo=" + camera.stereoTargetEye + ", target=" + (camera.targetTexture == null ? "screen" : camera.targetTexture.name));

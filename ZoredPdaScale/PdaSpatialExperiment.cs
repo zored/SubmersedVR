@@ -11,6 +11,7 @@ namespace ZoredPdaScale
         private readonly ManualLogSource log = BepInEx.Logging.Logger.CreateLogSource("Zored PDA Spatial");
         private readonly Dictionary<Transform, int> originalLayers = new Dictionary<Transform, int>();
         private bool requested;
+        private bool useSiblingCamera = true;
         private int layer = -1;
         private Camera dedicated;
         private uGUI_PDA target;
@@ -21,6 +22,12 @@ namespace ZoredPdaScale
             {
                 requested = !requested;
                 log.LogInfo("Spatial experiment " + (requested ? "enabled" : "disabled"));
+            }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F12))
+            {
+                useSiblingCamera = !useSiblingCamera;
+                log.LogInfo("Spatial camera mode: " + (useSiblingCamera ? "sibling" : "child"));
+                Restore();
             }
         }
 
@@ -45,7 +52,7 @@ namespace ZoredPdaScale
                 Restore();
                 return;
             }
-            if (dedicated != null && (target != pda || dedicated.transform.parent != uiCamera.transform)) Restore();
+            if (dedicated != null && (target != pda || dedicated.transform.parent != (useSiblingCamera ? uiCamera.transform.parent : uiCamera.transform))) Restore();
             if (dedicated == null && !StartExperiment(pda, uiCamera, worldCamera))
             {
                 requested = false;
@@ -67,7 +74,7 @@ namespace ZoredPdaScale
             for (int i = 8; i < 31; i++) if ((used & (1 << i)) == 0) { layer = i; break; }
             if (layer < 0) { log.LogWarning("No unused layer; spatial experiment not started."); return false; }
             var holder = new GameObject("Zored PDA Spatial Camera");
-            holder.transform.SetParent(uiCamera.transform, false);
+            holder.transform.SetParent(useSiblingCamera ? uiCamera.transform.parent : uiCamera.transform, false);
             dedicated = holder.AddComponent<Camera>();
             dedicated.CopyFrom(uiCamera);
             dedicated.cullingMask = 1 << layer;
@@ -75,7 +82,7 @@ namespace ZoredPdaScale
             dedicated.depth = (worldCamera.depth + uiCamera.depth) / 2f;
             dedicated.enabled = true;
             target = pda;
-            log.LogInfo("PDA-only camera started on layer " + layer + "; depth=" + dedicated.depth);
+            log.LogInfo("PDA-only " + (useSiblingCamera ? "sibling" : "child") + " camera started on layer " + layer + "; depth=" + dedicated.depth);
             return true;
         }
 

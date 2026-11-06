@@ -8,3 +8,5 @@
 - F10 records a read-only snapshot of PDA canvases, materials and cameras to diagnose depth without changing other UI rendering.
 
 - Add an opt-in F11 experiment that renders the PDA on a dedicated camera and layer while keeping the shared UI camera unchanged. Closing the PDA or switching the experiment off restores its original layers.
+
+- Avoid nesting the PDA rendering camera under another VR-tracked camera by default. F12 switches between sibling and original nested camera modes for live comparison; F10 records the physical PDA model hierarchy.
