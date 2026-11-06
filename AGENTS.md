@@ -12,3 +12,5 @@
 - The player's preferred PDA scale was saved as 2.0 in BepInEx configuration.
 
 - F10 records a read-only snapshot of PDA canvases, materials and cameras in the Zored PDA Depth log. Do not change shared UI camera depth behavior to fix PDA-only occlusion.
+
+- F11 toggles the experimental PDA-only camera; it defaults off each launch. The experiment requires in-headset checks for depth, both eyes, pointer, other UI, and restored layers after closing the PDA.

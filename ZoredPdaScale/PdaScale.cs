@@ -18,6 +18,7 @@ namespace ZoredPdaScale
             harmony = new Harmony("zored.submersedvr.pdascale");
             harmony.PatchAll();
             gameObject.AddComponent<DepthProbe>();
+            gameObject.AddComponent<PdaSpatialExperiment>();
             Logger.LogInfo("PDA scaling enabled.");
         }
 
