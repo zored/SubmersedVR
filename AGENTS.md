@@ -16,3 +16,5 @@
 - F11 toggles the experimental PDA-only camera; it defaults off each launch. The experiment requires in-headset checks for depth, both eyes, pointer, other UI, and restored layers after closing the PDA.
 
 - F12 compares sibling and nested experimental VR camera tracking without restarting. F10 also logs PDA model and anchor hierarchy; confirm which object owns the tablet before scaling its model.
+
+- The PDA model is PlayerPDA/Mesh; the hand and ScreenAnchor are separate. TabletModelScale changes the mesh's local X/Y scale only; Numpad +/- adjusts it at runtime. Validate the mesh axes and fit in VR.
