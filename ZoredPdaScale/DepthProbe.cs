@@ -1,51 +1,44 @@
+using System.Collections.Generic;
 using BepInEx.Logging;
 using UnityEngine;
-using HarmonyLib;
+using UnityEngine.UI;
 
 namespace ZoredPdaScale
 {
-    // Diagnostic experiment: compare the GUI camera with and without a depth clear.
+    // Read-only snapshot for diagnosing PDA rendering in the actual VR session.
     public sealed class DepthProbe : MonoBehaviour
     {
         private readonly ManualLogSource log = BepInEx.Logging.Logger.CreateLogSource("Zored PDA Depth");
-        private bool enabledExperiment;
-        private Camera modifiedCamera;
-        private CameraClearFlags previousFlags;
 
         private void Update()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F10))
+            if (!UnityEngine.Input.GetKeyDown(KeyCode.F10)) return;
+            log.LogInfo("Snapshot begin");
+            foreach (var camera in Camera.allCameras)
             {
-                enabledExperiment = !enabledExperiment;
-                log.LogInfo("Depth experiment " + (enabledExperiment ? "enabled" : "disabled"));
+                log.LogInfo("Camera " + camera.name + ": depth=" + camera.depth + ", clear=" + camera.clearFlags + ", mask=" + camera.cullingMask + ", stereo=" + camera.stereoTargetEye + ", target=" + (camera.targetTexture == null ? "screen" : camera.targetTexture.name));
             }
-
-            var root = SNCameraRoot.main;
-            var player = Player.main;
-            var pda = player == null ? null : player.GetPDA();
-            var camera = root == null ? null : AccessTools.Field(typeof(SNCameraRoot), "guiCamera").GetValue(root) as Camera;
-            bool apply = enabledExperiment && pda != null && pda.isInUse && camera != null;
-
-            if (modifiedCamera != null && (!apply || modifiedCamera != camera)) Restore();
-            if (apply && modifiedCamera == null)
+            var pda = FindObjectOfType<uGUI_PDA>();
+            if (pda == null)
             {
-                modifiedCamera = camera;
-                previousFlags = camera.clearFlags;
-                log.LogInfo("GUI camera=" + camera.name + ", clear=" + previousFlags + ", depth=" + camera.depth + ", mask=" + camera.cullingMask + "; testing Nothing");
-                camera.clearFlags = CameraClearFlags.Nothing;
+                log.LogWarning("PDA UI not found; open the PDA and press F10 again.");
+                return;
             }
+            foreach (var canvas in pda.GetComponentsInChildren<Canvas>(true))
+            {
+                log.LogInfo("Canvas " + canvas.name + ": active=" + canvas.gameObject.activeInHierarchy + ", layer=" + canvas.gameObject.layer + ", mode=" + canvas.renderMode + ", camera=" + (canvas.worldCamera == null ? "none" : canvas.worldCamera.name) + ", sortingLayer=" + canvas.sortingLayerID + ", order=" + canvas.sortingOrder + ", override=" + canvas.overrideSorting);
+            }
+            var seen = new HashSet<int>();
+            foreach (var graphic in pda.GetComponentsInChildren<Graphic>(true))
+            {
+                if (!graphic.gameObject.activeInHierarchy || graphic.materialForRendering == null) continue;
+                var material = graphic.materialForRendering;
+                if (!seen.Add(material.GetInstanceID())) continue;
+                var shader = material.shader;
+                log.LogInfo("Material " + material.name + ": graphic=" + graphic.name + ", shader=" + (shader == null ? "none" : shader.name) + ", queue=" + material.renderQueue + ", ZTest=" + (material.HasProperty("_ZTest") ? material.GetFloat("_ZTest").ToString() : "unset") + ", ZWrite=" + (material.HasProperty("_ZWrite") ? material.GetFloat("_ZWrite").ToString() : "unset"));
+                if (seen.Count >= 30) { log.LogInfo("Material list capped at 30"); break; }
+            }
+            log.LogInfo("Snapshot end");
         }
-
-        private void Restore()
-        {
-            if (modifiedCamera != null)
-            {
-                modifiedCamera.clearFlags = previousFlags;
-                log.LogInfo("Restored GUI camera clear mode to " + previousFlags);
-            }
-            modifiedCamera = null;
-        }
-
-        private void OnDestroy() { Restore(); }
     }
 }
