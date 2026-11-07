@@ -16,10 +16,10 @@ namespace ZoredPdaScale
 
         private void Update()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.KeypadPlus)) Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 3f);
-            if (UnityEngine.Input.GetKeyDown(KeyCode.KeypadMinus)) Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 3f);
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Keypad1)) { Width.Value = Mathf.Clamp(Width.Value - 0.1f, 0.5f, 3f); Debug.Log("Zored PDA width: " + Width.Value.ToString("F1")); }
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Keypad3)) { Width.Value = Mathf.Clamp(Width.Value + 0.1f, 0.5f, 3f); Debug.Log("Zored PDA width: " + Width.Value.ToString("F1")); }
+            if (Plugin.AdjustmentKey(KeyCode.I)) Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 3f);
+            if (Plugin.AdjustmentKey(KeyCode.K)) Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 3f);
+            if (Plugin.AdjustmentKey(KeyCode.U)) { Width.Value = Mathf.Clamp(Width.Value - 0.1f, 0.5f, 3f); Debug.Log("Zored PDA width: " + Width.Value.ToString("F1")); }
+            if (Plugin.AdjustmentKey(KeyCode.O)) { Width.Value = Mathf.Clamp(Width.Value + 0.1f, 0.5f, 3f); Debug.Log("Zored PDA width: " + Width.Value.ToString("F1")); }
         }
 
         private void LateUpdate()

@@ -14,3 +14,5 @@
 - Enlarge the tablet mesh in its local X/Y plane while preserving thickness and the hand/screen anchor. Numpad +/- adjusts model size in-game.
 
 - Add Numpad 4/6 to shift the PDA interface horizontally and Numpad 1/3 to adjust tablet width separately, with persistent settings. The new default shifts the interface slightly and widens the tablet; verify local directions and fit in VR.
+
+- Replace keypad controls with letter keys while the PDA is open: J/L move the interface, U/O adjust tablet width, and K/I adjust tablet size.

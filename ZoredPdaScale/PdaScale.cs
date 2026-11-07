@@ -16,9 +16,9 @@ namespace ZoredPdaScale
         private void Awake()
         {
             Scale = Config.Bind("PDA", "Scale", 2.0f, "PDA size multiplier. F7/F8 adjust it while playing.");
-            HorizontalOffset = Config.Bind("PDA", "HorizontalOffset", 0.02f, "Horizontal UI offset in metres. Numpad 4/6 adjust it while playing.");
-            TabletModelScale.Width = Config.Bind("PDA", "TabletWidth", 1.2f, "Additional tablet width multiplier. Numpad 1/3 adjust it while playing.");
-            TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 2.0f, "Tablet model size multiplier. Numpad +/- adjust it while playing.");
+            HorizontalOffset = Config.Bind("PDA", "HorizontalOffset", 0.02f, "Horizontal UI offset in metres. J/L adjust it while the PDA is open.");
+            TabletModelScale.Width = Config.Bind("PDA", "TabletWidth", 1.2f, "Additional tablet width multiplier. U/O adjust it while the PDA is open.");
+            TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 2.0f, "Tablet model size multiplier. K/I adjust it while the PDA is open.");
             harmony = new Harmony("zored.submersedvr.pdascale");
             harmony.PatchAll();
             gameObject.AddComponent<TabletModelScale>();
@@ -32,8 +32,8 @@ namespace ZoredPdaScale
             if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 2f);
             if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 2f);
             bool offsetChanged = false;
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Keypad4)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value - 0.01f, -0.3f, 0.3f); offsetChanged = true; }
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Keypad6)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value + 0.01f, -0.3f, 0.3f); offsetChanged = true; }
+            if (AdjustmentKey(KeyCode.J)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value - 0.01f, -0.3f, 0.3f); offsetChanged = true; }
+            if (AdjustmentKey(KeyCode.L)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value + 0.01f, -0.3f, 0.3f); offsetChanged = true; }
             if (offsetChanged)
             {
                 var pda = FindObjectOfType<uGUI_PDA>();
@@ -42,6 +42,12 @@ namespace ZoredPdaScale
             }
         }
 
+        internal static bool AdjustmentKey(KeyCode key)
+        {
+            var player = Player.main;
+            var pda = player == null ? null : player.GetPDA();
+            return pda != null && pda.isInUse && UnityEngine.Input.GetKeyDown(key);
+        }
         private void OnDestroy()
         {
             harmony.UnpatchSelf();
