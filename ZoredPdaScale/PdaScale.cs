@@ -51,6 +51,7 @@ namespace ZoredPdaScale
         private void OnDestroy()
         {
             harmony.UnpatchSelf();
+            PdaScalePatch.Restore();
         }
     }
 
@@ -59,6 +60,16 @@ namespace ZoredPdaScale
     {
         private static uGUI_CanvasScaler current;
         private static Vector3 originalScale;
+
+        internal static void Restore()
+        {
+            if (current != null)
+            {
+                current.transform.localScale = originalScale;
+                current.SetDirty();
+                current = null;
+            }
+        }
 
         [HarmonyPostfix]
         [HarmonyAfter("SubmersedVR")]

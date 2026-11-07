@@ -1,6 +1,7 @@
 param(
     [string]$GamePath = 'D:\SteamLibrary\steamapps\common\Subnautica',
-    [switch]$BuildOnly
+    [switch]$BuildOnly,
+    [switch]$HotReload
 )
 $ErrorActionPreference = 'Stop'
 $game = (Resolve-Path -LiteralPath $GamePath).Path
@@ -22,11 +23,24 @@ $references = @(
     (Join-Path $managed 'UnityEngine.InputLegacyModule.dll'), (Join-Path $managed 'UnityEngine.UI.dll'), (Join-Path $managed 'UnityEngine.UIModule.dll')
 )
 foreach ($reference in $references) { if (-not (Test-Path -LiteralPath $reference)) { throw "Missing reference: $reference" } }
-$compilerArgs = @('/nologo', '/target:library', "/out:$output") + @($references | ForEach-Object { "/reference:$_" }) + $sources
+$compilerArgs = @('/nologo', '/debug:pdbonly', '/target:library', "/out:$output") + @($references | ForEach-Object { "/reference:$_" }) + $sources
 & $compiler @compilerArgs
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed; existing installed plugin was left untouched.' }
 Write-Host "Built: $output"
 if ($BuildOnly) { return }
+if ($HotReload) {
+    $engine = Join-Path $pluginDir 'ScriptEngine.dll'
+    $normalPlugin = Join-Path $pluginDir 'ZoredPdaScale.dll'
+    if (-not (Test-Path -LiteralPath $engine)) { throw 'ScriptEngine is not installed; set it up with the game closed first.' }
+    if (Test-Path -LiteralPath $normalPlugin) { throw 'Remove the normal ZoredPdaScale.dll with the game closed before using ScriptEngine; never load both copies.' }
+    $scripts = Join-Path $game 'BepInEx\scripts'
+    New-Item -ItemType Directory -Force -Path $scripts | Out-Null
+    Copy-Item -LiteralPath ([IO.Path]::ChangeExtension($output, '.pdb')) -Destination (Join-Path $scripts 'ZoredPdaScale.pdb') -Force
+    Copy-Item -LiteralPath $output -Destination (Join-Path $scripts 'ZoredPdaScale.dll') -Force
+    Write-Host 'Updated script; press F6 in game to reload.'
+    return
+}
+if (Test-Path -LiteralPath (Join-Path $game 'BepInEx\scripts\ZoredPdaScale.dll')) { throw 'ScriptEngine copy exists; remove it before installing the normal plugin.' }
 if (Get-Process -Name Subnautica -ErrorAction SilentlyContinue) { throw 'Close Subnautica before installing; build succeeded.' }
 $destination = Join-Path $pluginDir 'ZoredPdaScale.dll'
 if (Test-Path -LiteralPath $destination) { Copy-Item -LiteralPath $destination -Destination "$destination.bak" -Force }

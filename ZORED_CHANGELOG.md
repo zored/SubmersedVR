@@ -16,3 +16,7 @@
 - Add Numpad 4/6 to shift the PDA interface horizontally and Numpad 1/3 to adjust tablet width separately, with persistent settings. The new default shifts the interface slightly and widens the tablet; verify local directions and fit in VR.
 
 - Replace keypad controls with letter keys while the PDA is open: J/L move the interface, U/O adjust tablet width, and K/I adjust tablet size.
+
+- Scale the physical tablet around the mesh bounds center and choose the width axis from the screen orientation; verify the axis and alignment in VR.
+
+- Prepare an opt-in ScriptEngine build mode for F6 reloads and restore PDA UI state when unloading; in-game compatibility remains to be verified.

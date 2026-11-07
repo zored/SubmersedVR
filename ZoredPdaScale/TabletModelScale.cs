@@ -11,7 +11,8 @@ namespace ZoredPdaScale
         private Transform mesh;
         private Vector3 originalScale;
         private Vector3 originalPosition;
-        private float leftEdge;
+        private Vector3 meshCenter;
+        private bool widthIsX;
         private PDA owner;
 
         private void Update()
@@ -37,13 +38,18 @@ namespace ZoredPdaScale
                 originalScale = mesh.localScale;
                 originalPosition = mesh.localPosition;
                 var filter = mesh.GetComponent<MeshFilter>();
-                leftEdge = filter != null && filter.sharedMesh != null ? filter.sharedMesh.bounds.min.x : 0f;
+                if (filter == null || filter.sharedMesh == null) { Debug.LogWarning("Zored PDA: tablet mesh bounds unavailable; scaling skipped."); mesh = null; owner = null; return; }
+                meshCenter = filter.sharedMesh.bounds.center;
+                var screenRight = pda.screenAnchor != null ? pda.screenAnchor.right : pda.transform.right;
+                widthIsX = Mathf.Abs(Vector3.Dot(mesh.right, screenRight)) >= Mathf.Abs(Vector3.Dot(mesh.up, screenRight));
+                Debug.Log("Zored PDA: width axis=" + (widthIsX ? "X" : "Y") + ", mesh center=" + meshCenter);
             }
             var scale = Mathf.Clamp(Scale.Value, 0.5f, 3f);
             var width = Mathf.Clamp(Width.Value, 0.5f, 3f);
-            mesh.localScale = Vector3.Scale(originalScale, new Vector3(scale * width, scale, 1f));
-            // Keep the local minimum-X edge fixed while adding width.
-            mesh.localPosition = originalPosition + mesh.localRotation * new Vector3(leftEdge * originalScale.x * scale * (1f - width), 0f, 0f);
+            var newScale = Vector3.Scale(originalScale, widthIsX ? new Vector3(scale * width, scale, 1f) : new Vector3(scale, scale * width, 1f));
+            // Compensate for the mesh pivot so its bounds center stays in place.
+            mesh.localScale = newScale;
+            mesh.localPosition = originalPosition + mesh.localRotation * Vector3.Scale(meshCenter, originalScale - newScale);
         }
 
         private void Restore()
