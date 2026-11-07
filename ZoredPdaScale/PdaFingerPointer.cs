@@ -11,15 +11,25 @@ namespace ZoredPdaScale
         private Transform pointer;
         private Vector3 savedLocalPosition;
         private bool positioned;
+        private readonly FingerPoseCache<Vector3> pose = new FingerPoseCache<Vector3>();
         private static readonly System.Type rigType = AccessTools.TypeByName("SubmersedVR.VRCameraRig");
         private static readonly FieldInfo instanceField = rigType == null ? null : AccessTools.Field(rigType, "instance");
         private static readonly FieldInfo pointerField = rigType == null ? null : AccessTools.Field(rigType, "laserPointerUI");
 
         private void Awake() { active = this; }
-        private void LateUpdate() { Sync(); }
         private void OnDestroy() { Restore(); if (active == this) active = null; }
 
-        internal static void BeforeRaycast() { if (active != null) active.Sync(); }
+        internal static void AfterHandUpdate() { if (active != null) active.Sync(); }
+        internal static void BeforeRaycast()
+        {
+            if (active == null) return;
+            var player = Player.main;
+            var pda = player == null ? null : player.GetPDA();
+            if (pda == null || !pda.isInUse) { active.Restore(); return; }
+            Vector3 localPosition;
+            if (active.positioned && active.pointer != null && active.pose.TryGet(out localPosition))
+                active.pointer.localPosition = localPosition;
+        }
 
         private void Sync()
         {
@@ -51,6 +61,7 @@ namespace ZoredPdaScale
             }
             // SubmersedVR maps the PDA into UI space by subtracting the camera root position.
             pointer.position = tip.position - root.transform.position;
+            pose.Save(pointer.localPosition);
         }
 
         private void Restore()
@@ -58,7 +69,15 @@ namespace ZoredPdaScale
             if (positioned && pointer != null) pointer.localPosition = savedLocalPosition;
             positioned = false;
             pointer = null;
+            pose.Clear();
         }
+    }
+
+    [HarmonyPatch]
+    internal static class PdaFingerPointerHandUpdate
+    {
+        private static MethodBase TargetMethod() { return AccessTools.Method(AccessTools.TypeByName("SubmersedVR.VRHands"), "LateUpdate"); }
+        private static void Postfix() { PdaFingerPointer.AfterHandUpdate(); }
     }
 
     [HarmonyPatch(typeof(FPSInputModule), "GetCursorScreenPosition")]

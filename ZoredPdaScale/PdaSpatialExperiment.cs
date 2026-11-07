@@ -10,7 +10,7 @@ namespace ZoredPdaScale
     {
         private readonly ManualLogSource log = BepInEx.Logging.Logger.CreateLogSource("Zored PDA Spatial");
         private readonly Dictionary<Transform, int> originalLayers = new Dictionary<Transform, int>();
-        private bool requested;
+        private bool requested = true;
         private bool useSiblingCamera = true;
         private int layer = -1;
         private Camera dedicated;

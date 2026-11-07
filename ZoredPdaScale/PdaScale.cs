@@ -37,6 +37,8 @@ namespace ZoredPdaScale
 
         private void Update()
         {
+            if (GameInput.GetButtonDown(GameInput.Button.UIMenu))
+                Logger.LogInfo("Pause diagnostic: UIMenu pressed; menu=" + (IngameMenu.main == null ? "none" : IngameMenu.main.gameObject.activeInHierarchy.ToString()));
             if (UnityEngine.Input.GetKeyDown(KeyCode.F9))
             {
                 var player = Player.main;

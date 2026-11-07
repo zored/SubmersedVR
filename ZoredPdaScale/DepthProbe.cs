@@ -54,14 +54,47 @@ namespace ZoredPdaScale
             }
             if (input != null)
             {
+                try
+                {
+                    var actions = HarmonyLib.AccessTools.TypeByName("Valve.VR.SteamVR_Actions");
+                    var actionProperty = actions == null ? null : HarmonyLib.AccessTools.Property(actions, "subnautica_UIMenu");
+                    var action = actionProperty == null ? null : actionProperty.GetValue(null, null);
+                    if (action != null)
+                    {
+                        var active = HarmonyLib.AccessTools.Property(action.GetType(), "active");
+                        var binding = HarmonyLib.AccessTools.Property(action.GetType(), "activeBinding");
+                        log.LogInfo("Pause SteamVR action: active=" + (active == null ? "unknown" : active.GetValue(action, null)) + ", binding=" + (binding == null ? "unknown" : binding.GetValue(action, null)));
+                    }
+                    else log.LogInfo("Pause SteamVR action unavailable");
+                }
+                catch (System.Exception e) { log.LogWarning("Pause SteamVR action diagnostic failed: " + e.Message); }
+                var lockField = HarmonyLib.AccessTools.Field(typeof(FPSInputModule), "lockPauseMenu");
+                log.LogInfo("Pause diagnostic: UIMenu held=" + GameInput.GetButtonHeld(GameInput.Button.UIMenu) + ", lockPauseMenu=" + (lockField == null ? "unknown" : lockField.GetValue(input).ToString()) + ", menu=" + (IngameMenu.main == null ? "none" : IngameMenu.main.gameObject.activeInHierarchy.ToString()));
+                log.LogInfo("Raycast at event: " + PdaRaycastCapture.Describe());
                 var hitField = HarmonyLib.AccessTools.Field(typeof(FPSInputModule), "lastRaycastResult");
                 var timeField = HarmonyLib.AccessTools.Field(typeof(FPSInputModule), "lastValidRaycastTime");
                 var hit = hitField == null ? default(UnityEngine.EventSystems.RaycastResult) : (UnityEngine.EventSystems.RaycastResult)hitField.GetValue(input);
                 var hitTime = timeField == null ? 0f : (float)timeField.GetValue(input);
                 log.LogInfo("Pointer hit: object=" + (hit.gameObject == null ? "none" : hit.gameObject.name) + ", world=" + hit.worldPosition + ", distance=" + hit.distance + ", age=" + (Time.unscaledTime - hitTime));
+                var module = hit.module;
+                var camera = module == null ? null : module.eventCamera;
+                log.LogInfo("Pointer raycast: module=" + (module == null ? "none" : module.GetType().FullName + "/" + module.name) + ", camera=" + (camera == null ? "none" : camera.name) + ", screen=" + hit.screenPosition.ToString("F3") + ", world=" + hit.worldPosition.ToString("F5") + ", distance=" + hit.distance.ToString("F5"));
+                if (camera != null)
+                {
+                    var ray = camera.ScreenPointToRay(hit.screenPosition);
+                    log.LogInfo("Pointer event ray: origin=" + ray.origin.ToString("F5") + ", direction=" + ray.direction.ToString("F5") + ", cameraPosition=" + camera.transform.position.ToString("F5") + ", cameraForward=" + camera.transform.forward.ToString("F5"));
+                }
+                if (pointer != null)
+                {
+                    var origin = pointer.transform.position;
+                    var direction = pointer.transform.forward;
+                    var delta = hit.worldPosition - origin;
+                    log.LogInfo("Pointer geometry: origin=" + origin.ToString("F5") + ", forward=" + direction.ToString("F5") + ", hitAlong=" + Vector3.Dot(delta, direction).ToString("F5") + ", hitOffAxis=" + Vector3.Cross(delta, direction).magnitude.ToString("F5") + ", root=" + (SNCameraRoot.main == null ? "none" : SNCameraRoot.main.transform.position.ToString("F5")));
+                }
             }
             var pda = FindObjectOfType<uGUI_PDA>();
             if (pda != null) log.LogInfo("PDA UI transform: position=" + pda.transform.position + ", rotation=" + pda.transform.eulerAngles + ", scale=" + pda.transform.lossyScale);
+            if (pda != null) log.LogInfo("PDA UI precise: position=" + pda.transform.position.ToString("F5") + ", rotation=" + pda.transform.rotation.ToString("F5") + ", scale=" + pda.transform.lossyScale.ToString("F7"));
             if (pda == null)
             {
                 log.LogWarning("PDA UI not found; open the PDA and press F10 again.");
@@ -82,6 +115,41 @@ namespace ZoredPdaScale
                 if (seen.Count >= 30) { log.LogInfo("Material list capped at 30"); break; }
             }
             log.LogInfo("Snapshot end");
+        }
+    }
+
+    // Capture the camera at the same instant as the sorted EventSystem result.
+    [HarmonyLib.HarmonyPatch(typeof(FPSInputModule), "UpdateMouseState")]
+    internal static class PdaRaycastCapture
+    {
+        private static bool captured;
+        private static float time;
+        private static Vector3 origin, direction, world;
+        private static Vector2 screen;
+        private static string target, moduleName, cameraName;
+
+        private static void Prefix(UnityEngine.EventSystems.PointerEventData leftData)
+        {
+            var hit = leftData.pointerCurrentRaycast;
+            var module = hit.module;
+            var camera = module == null ? null : module.eventCamera;
+            if (camera == null || camera.name != "laserPointerUI") return;
+            captured = true;
+            time = Time.unscaledTime;
+            origin = camera.transform.position;
+            direction = camera.transform.forward;
+            world = hit.worldPosition;
+            screen = hit.screenPosition;
+            target = hit.gameObject == null ? "none" : hit.gameObject.name;
+            moduleName = module.GetType().FullName + "/" + module.name;
+            cameraName = camera.name;
+        }
+
+        internal static string Describe()
+        {
+            if (!captured) return "no event captured";
+            var delta = world - origin;
+            return "age=" + (Time.unscaledTime - time).ToString("F4") + ", target=" + target + ", module=" + moduleName + ", camera=" + cameraName + ", screen=" + screen.ToString("F3") + ", origin=" + origin.ToString("F5") + ", forward=" + direction.ToString("F5") + ", hit=" + world.ToString("F5") + ", offAxis=" + Vector3.Cross(delta, direction).magnitude.ToString("F5");
         }
     }
 }

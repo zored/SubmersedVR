@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add a PS VR2 binding for a short Options press using the Sony driver’s single-click mode; the user confirmed that it opens the pause menu. A long press still recenters VR.
+
+- Keep the PDA pointer aligned with the tracked fingertip by capturing its pose after the VR hand update; the user confirmed the pointer works in the headset.
+- Request the PDA-only camera automatically after load or F6; F11 can still toggle it for the session, and the unused-layer safety check remains in place.
+
 - Add a separate SubmersedVR companion plugin that enlarges the PDA interface to 200% by default. F7/F8 adjust the scale in 10% increments while the game is running.
 - Add a PowerShell build and install script for the companion plugin.
 
