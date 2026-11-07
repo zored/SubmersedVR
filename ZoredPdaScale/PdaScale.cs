@@ -30,6 +30,17 @@ namespace ZoredPdaScale
 
         private void Update()
         {
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F9))
+            {
+                var player = Player.main;
+                var pda = player == null ? null : player.GetPDA();
+                if (pda != null && pda.isInUse && Application.isFocused && Time.timeScale == 0f && !UWE.FreezeTime.HasFreezers())
+                {
+                    Time.timeScale = 1f;
+                    Logger.LogWarning("F9 restored game time after a PDA freeze with no active pause reasons.");
+                }
+                else Logger.LogInfo("F9 recovery skipped: PDA, focus, time scale or active pause conditions do not match.");
+            }
             bool scaleChanged = false;
             if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) { Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 2f); scaleChanged = true; }
             if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) { Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 2f); scaleChanged = true; }
