@@ -1,20 +1,7 @@
 # Project notes
 
-- Work in branch `zored` of `zored/SubmersedVR`; upstream is `Okabintaro/SubmersedVR`.
-- Record user-facing feature changes in `ZORED_CHANGELOG.md`.
-- Local game: `D:\SteamLibrary\steamapps\common\Subnautica`. The player uses PS VR2 and SteamVR.
-- The original SubmersedVR plugin is installed with Tobey's BepInEx pack. Keep the upstream DLL and SteamVR bindings intact when developing the separate Zored PDA plugin.
-- Build and install the PDA plugin with `powershell -ExecutionPolicy Bypass -File .\install-zored-pda.ps1`; `-BuildOnly` compiles without installation. The game must be closed to install.
-- Check `BepInEx\LogOutput.log` for plugin loading and errors. Actual VR positioning and interaction require testing in the headset.
-- `F7` and `F8` adjust the PDA multiplier in the running game; the value is persisted by BepInEx. Full code reload requires more lifecycle cleanup and is not implemented.
-
-- After completing changes, commit and push them to branch `zored`; report whether the game needs restarting.
-- The player's preferred PDA scale was saved as 2.0 in BepInEx configuration.
-
-- F10 records a read-only snapshot of PDA canvases, materials and cameras in the Zored PDA Depth log. Do not change shared UI camera depth behavior to fix PDA-only occlusion.
-
-- F11 toggles the experimental PDA-only camera; it defaults off each launch. The experiment requires in-headset checks for depth, both eyes, pointer, other UI, and restored layers after closing the PDA.
-
-- F12 compares sibling and nested experimental VR camera tracking without restarting. F10 also logs PDA model and anchor hierarchy; confirm which object owns the tablet before scaling its model.
-
-- The PDA model is PlayerPDA/Mesh; the hand and ScreenAnchor are separate. TabletModelScale changes the mesh's local X/Y scale only; Numpad +/- adjusts it at runtime. Validate the mesh axes and fit in VR.
+- Work in `C:\Users\BAZA\git\github.com\zored\SubmersedVR`, branch `zored`; upstream is `Okabintaro/SubmersedVR`. Record user-facing changes in `ZORED_CHANGELOG.md`; commit and push to `origin/zored` after verification.
+- The local game is `D:\SteamLibrary\steamapps\common\Subnautica`; the player uses PS VR2, SteamVR and BepInEx. Keep the original SubmersedVR DLL and existing SteamVR bindings intact. Never close the game without preserving the player's save; explain after each change whether a restart is needed.
+- Build the separate companion with `powershell -ExecutionPolicy Bypass -File .\install-zored-pda.ps1 -BuildOnly`. The currently used experimental ScriptEngine path is `-HotReload` followed by F6 in game; this reloads the companion, not the main SubmersedVR plugin. The normal installation requires the game closed. F11 defaults off after launch or F6 and must be enabled manually. Saved settings are user preferences: preserve them.
+- Current controls: F7/F8 change interface scale; J/L adjust horizontal offset, U/O tablet width, K/I tablet size while the PDA is open. F9 is a guarded manual recovery for a stuck PDA when the game is focused, timeScale is zero and no FreezeTime reason is active. F10 takes diagnostic snapshots. F11 toggles the PDA-only camera; F12 switches its sibling/child mode. Avoid changing shared UI camera depth to fix PDA-only occlusion.
+- For the present pointer, pause-binding and focus-freeze investigation, read `ZORED_PDA_STATUS.md`. Validate positioning, input and both eyes in the headset; check `BepInEx\LogOutput.log` and SteamVR logs as applicable.
