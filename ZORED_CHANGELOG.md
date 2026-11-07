@@ -36,3 +36,5 @@
 - Add F9 as a manual recovery for a stuck PDA when the game is focused, time is stopped and no game pause reason is active; record freeze reasons in F10 snapshots.
 
 - Extend F10 snapshots with UI pointer, raycast result and PDA canvas positions to investigate cursor drift.
+
+- Enable the game's run-in-background setting when the companion loads, configurable in General/RunInBackground; F10 also records both background settings. Background VR testing is ongoing.

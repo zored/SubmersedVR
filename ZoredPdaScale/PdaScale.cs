@@ -19,6 +19,13 @@ namespace ZoredPdaScale
             HorizontalOffset = Config.Bind("PDA", "HorizontalOffset", 0.05f, "Horizontal UI offset in metres. J/L adjust it while the PDA is open.");
             TabletModelScale.Width = Config.Bind("PDA", "TabletWidth", 1.0f, "Additional tablet width multiplier. U/O adjust it while the PDA is open.");
             TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 1.9f, "Tablet model size multiplier. K/I adjust it while the PDA is open.");
+            var runInBackground = Config.Bind("General", "RunInBackground", true, "When enabled, turn on the game setting for background play on load. When disabled, leave the game setting unchanged; turn it off in game settings if needed.");
+            if (runInBackground.Value)
+            {
+                MiscSettings.runInBackground = true;
+                ApplicationFocus.OnRunInBackgroundChanged();
+                Logger.LogInfo("Background play enabled via companion.");
+            }
             harmony = new Harmony("zored.submersedvr.pdascale");
             harmony.PatchAll();
             gameObject.AddComponent<TabletModelScale>();

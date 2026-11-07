@@ -19,7 +19,7 @@ namespace ZoredPdaScale
             if (gamePda != null)
             {
                 log.LogInfo("PDA state: isInUse=" + gamePda.isInUse + ", isOpen=" + gamePda.isOpen + ", active=" + gamePda.gameObject.activeInHierarchy);
-                log.LogInfo("PDA timing: timeScale=" + Time.timeScale + ", time=" + Time.time + ", unscaledTime=" + Time.unscaledTime + ", focused=" + Application.isFocused);
+                log.LogInfo("PDA timing: timeScale=" + Time.timeScale + ", time=" + Time.time + ", unscaledTime=" + Time.unscaledTime + ", focused=" + Application.isFocused + ", gameRunInBackground=" + MiscSettings.runInBackground + ", unityRunInBackground=" + Application.runInBackground);
                 log.LogInfo("PDA freeze reasons: " + UWE.FreezeTime.Debug());
                 log.LogInfo("PDA object: " + gamePda.name + ", localPosition=" + gamePda.transform.localPosition + ", localRotation=" + gamePda.transform.localEulerAngles + ", scale=" + gamePda.transform.localScale);
                 var animator = player.playerAnimator;
