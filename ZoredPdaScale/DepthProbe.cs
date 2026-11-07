@@ -13,6 +13,11 @@ namespace ZoredPdaScale
         private void Update()
         {
             if (!UnityEngine.Input.GetKeyDown(KeyCode.F10)) return;
+            Snapshot();
+        }
+
+        internal void Snapshot()
+        {
             log.LogInfo("Snapshot begin");
             var player = Player.main;
             var gamePda = player == null ? null : player.GetPDA();

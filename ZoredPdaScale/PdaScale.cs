@@ -12,6 +12,9 @@ namespace ZoredPdaScale
         internal static ConfigEntry<float> Scale;
         internal static ConfigEntry<float> HorizontalOffset;
         private Harmony harmony;
+        private System.IO.FileSystemWatcher configWatcher;
+        private int configChanged;
+        private float configReloadAt = -1f;
 
         private void Awake()
         {
@@ -28,31 +31,58 @@ namespace ZoredPdaScale
             }
             harmony = new Harmony("zored.submersedvr.pdascale");
             harmony.PatchAll();
+            StartConfiguredScriptWatcher();
+            StartConfigWatcher();
             gameObject.AddComponent<TabletModelScale>();
             gameObject.AddComponent<DepthProbe>();
             gameObject.AddComponent<PdaSpatialExperiment>();
             gameObject.AddComponent<PdaFingerPointer>();
+            gameObject.AddComponent<PdaMenu>();
             Logger.LogInfo("PDA scaling enabled.");
+        }
+
+        private void StartConfiguredScriptWatcher()
+        {
+            try
+            {
+                var type = AccessTools.TypeByName("ScriptEngine.ScriptEngine");
+                BepInEx.PluginInfo info;
+                var engine = BepInEx.Bootstrap.Chainloader.PluginInfos.TryGetValue("com.bepis.bepinex.scriptengine", out info) ? info.Instance : null;
+                var config = type == null ? null : AccessTools.Property(type, "EnableFileSystemWatcher");
+                var watcher = type == null ? null : AccessTools.Field(type, "fileSystemWatcher");
+                var start = type == null ? null : AccessTools.Method(type, "StartFileSystemWatcher");
+                if (engine == null || config == null || watcher == null || start == null)
+                {
+                    Logger.LogWarning("ScriptEngine watcher unavailable: engine=" + (engine != null) + ", type=" + (type != null) + ", property=" + (config != null) + ", field=" + (watcher != null) + ", method=" + (start != null));
+                    return;
+                }
+                engine.Config.Reload();
+                var enabled = config.GetValue(engine, null) as ConfigEntry<bool>;
+                if (enabled != null && MenuControlRules.ShouldStartWatcher(enabled.Value, watcher.GetValue(engine) != null))
+                {
+                    start.Invoke(engine, null);
+                    Logger.LogInfo("ScriptEngine automatic reload watcher started.");
+                }
+                else Logger.LogInfo("ScriptEngine watcher: enabled=" + (enabled != null && enabled.Value) + ", running=" + (watcher.GetValue(engine) != null));
+            }
+            catch (System.Exception e) { Logger.LogWarning("ScriptEngine watcher setup failed: " + e.Message); }
         }
 
         private void Update()
         {
+            if (System.Threading.Interlocked.Exchange(ref configChanged, 0) != 0) configReloadAt = Time.unscaledTime + 1f;
+            if (configReloadAt >= 0f && Time.unscaledTime >= configReloadAt)
+            {
+                configReloadAt = -1f;
+                try { Config.Reload(); RefreshPda(); Logger.LogInfo("PDA configuration reloaded after file change."); }
+                catch (System.Exception e) { Logger.LogWarning("PDA configuration reload failed: " + e.Message); }
+            }
             if (GameInput.GetButtonDown(GameInput.Button.UIMenu))
                 Logger.LogInfo("Pause diagnostic: UIMenu pressed; menu=" + (IngameMenu.main == null ? "none" : IngameMenu.main.gameObject.activeInHierarchy.ToString()));
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F9))
-            {
-                var player = Player.main;
-                var pda = player == null ? null : player.GetPDA();
-                if (pda != null && pda.isInUse && Application.isFocused && Time.timeScale == 0f && !UWE.FreezeTime.HasFreezers())
-                {
-                    Time.timeScale = 1f;
-                    Logger.LogWarning("F9 restored game time after a PDA freeze with no active pause reasons.");
-                }
-                else Logger.LogInfo("F9 recovery skipped: PDA, focus, time scale or active pause conditions do not match.");
-            }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F9)) Recover(false);
             bool scaleChanged = false;
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) { Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 2f); scaleChanged = true; }
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) { Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 2f); scaleChanged = true; }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) { Scale.Value = MenuControlRules.Adjust(Scale.Value, -0.1f, 0.5f, 2f); scaleChanged = true; }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) { Scale.Value = MenuControlRules.Adjust(Scale.Value, 0.1f, 0.5f, 2f); scaleChanged = true; }
             bool offsetChanged = false;
             if (AdjustmentKey(KeyCode.J)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value - 0.01f, -0.3f, 0.3f); offsetChanged = true; }
             if (AdjustmentKey(KeyCode.L)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value + 0.01f, -0.3f, 0.3f); offsetChanged = true; }
@@ -65,6 +95,52 @@ namespace ZoredPdaScale
             }
         }
 
+        private void StartConfigWatcher()
+        {
+            try
+            {
+                var path = Config.ConfigFilePath;
+                configWatcher = new System.IO.FileSystemWatcher(System.IO.Path.GetDirectoryName(path), System.IO.Path.GetFileName(path));
+                configWatcher.NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.Size;
+                configWatcher.Changed += ConfigFileChanged;
+                configWatcher.Created += ConfigFileChanged;
+                configWatcher.Renamed += ConfigFileRenamed;
+                configWatcher.EnableRaisingEvents = true;
+                Logger.LogInfo("PDA configuration watcher started.");
+            }
+            catch (System.Exception e) { Logger.LogWarning("PDA configuration watcher failed: " + e.Message); }
+        }
+        private void ConfigFileChanged(object sender, System.IO.FileSystemEventArgs e) { System.Threading.Interlocked.Exchange(ref configChanged, 1); }
+        private void ConfigFileRenamed(object sender, System.IO.RenamedEventArgs e) { System.Threading.Interlocked.Exchange(ref configChanged, 1); }
+
+        internal void Recover(bool explicitMenu)
+        {
+            var player = Player.main;
+            var pda = player == null ? null : player.GetPDA();
+            if (MenuControlRules.MayRecover(pda != null && pda.isInUse, Application.isFocused, explicitMenu, Time.timeScale, UWE.FreezeTime.HasFreezers()))
+            {
+                Time.timeScale = 1f;
+                Logger.LogWarning("Recovery restored game time after a PDA freeze with no active pause reasons.");
+            }
+            else Logger.LogInfo("Recovery skipped: PDA, focus, time scale or active pause conditions do not match.");
+        }
+
+        internal static void AdjustInterface(float delta)
+        {
+            Scale.Value = MenuControlRules.Adjust(Scale.Value, delta, 0.5f, 2f);
+            RefreshPda();
+        }
+        internal static void AdjustOffset(float delta)
+        {
+            HorizontalOffset.Value = MenuControlRules.Adjust(HorizontalOffset.Value, delta, -0.3f, 0.3f);
+            RefreshPda();
+        }
+        private static void RefreshPda()
+        {
+            var pda = FindObjectOfType<uGUI_PDA>();
+            if (pda != null) { var scaler = pda.GetComponent<uGUI_CanvasScaler>(); if (scaler != null) scaler.SetDirty(); }
+        }
+
         internal static bool AdjustmentKey(KeyCode key)
         {
             var player = Player.main;
@@ -73,6 +149,7 @@ namespace ZoredPdaScale
         }
         private void OnDestroy()
         {
+            if (configWatcher != null) { configWatcher.EnableRaisingEvents = false; configWatcher.Dispose(); configWatcher = null; }
             harmony.UnpatchSelf();
             PdaScalePatch.Restore();
         }

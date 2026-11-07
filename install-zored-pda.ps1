@@ -20,7 +20,8 @@ $references = @(
     (Join-Path $core 'BepInEx.dll'), (Join-Path $core '0Harmony.dll'),
     (Join-Path $managed 'Assembly-CSharp.dll'), (Join-Path $managed 'Assembly-CSharp-firstpass.dll'),
     (Join-Path $managed 'UnityEngine.dll'), (Join-Path $managed 'UnityEngine.CoreModule.dll'),
-    (Join-Path $managed 'UnityEngine.AnimationModule.dll'), (Join-Path $managed 'UnityEngine.InputLegacyModule.dll'), (Join-Path $managed 'UnityEngine.UI.dll'), (Join-Path $managed 'UnityEngine.UIModule.dll')
+    (Join-Path $managed 'UnityEngine.AnimationModule.dll'), (Join-Path $managed 'UnityEngine.InputLegacyModule.dll'), (Join-Path $managed 'UnityEngine.UI.dll'), (Join-Path $managed 'UnityEngine.UIModule.dll'),
+    (Join-Path $managed 'Unity.TextMeshPro.dll')
 )
 foreach ($reference in $references) { if (-not (Test-Path -LiteralPath $reference)) { throw "Missing reference: $reference" } }
 $compilerArgs = @('/nologo', '/debug:pdbonly', '/target:library', "/out:$output") + @($references | ForEach-Object { "/reference:$_" }) + $sources

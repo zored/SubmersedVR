@@ -26,8 +26,12 @@ The user's actual gameplay includes VR while the Windows window is unfocused. F1
 
 ## Keyboard shortcuts while the game is in the background
 
-The user notes that F6, F9 and other keyboard shortcuts go to the foreground Windows application while the game is unfocused. The installed ScriptEngine has an opt-in AutoReload/EnableFileSystemWatcher with a delay, which can reload scripts after file changes without capturing global keystrokes; enabling it changes reload behavior and has not been tested or enabled. F9 belongs to the companion and currently requires Application.isFocused in addition to its freeze guards; any background alternative must explicitly account for that guard. Preserve controller actions and avoid capturing keystrokes in other applications without an intentional design and user agreement. No background shortcut solution has been implemented.
+ScriptEngine AutoReload/EnableFileSystemWatcher is enabled with a 3-second delay. DLL file changes triggered a successful automatic reload in the running game. The companion separately watches its own config and logged a successful reload after a file write. The pause menu now displays 13 direct buttons for settings and actions; the user confirmed they appear and the log recorded UI size +. Labels display adjustment steps relative to Scale 2.0, HorizontalOffset 0.05, TabletModelScale 1.9 and TabletWidth 1.0; appearance was confirmed but step changes have not been independently verified in the headset. F9 from the menu bypasses only the foreground requirement; it still requires an in-use PDA, zero timeScale and no FreezeTime reasons. Test other menu actions and layout as needed. Do not globally capture keyboard input.
 
 ## User interaction preferences
 
 Give the next concrete steps without asking whether the user is ready. Do not suggest saving the game; never close it without the user directing the session. The user plans direct finger-touch activation in a later chat.
+
+## Current handoff
+
+The user wants the next chat to implement direct finger-touch activation of PDA buttons. Existing fingertip ray pointing works; physical touch activation does not exist yet. Keep existing SteamVR bindings and settings, build the separate companion, use automatic ScriptEngine reload, and validate both eyes and drag behavior. The F11 camera may temporarily find no unused layer and now retries while requested; do not claim it always activates. The new menu actions beyond UI size + still need headset checks.

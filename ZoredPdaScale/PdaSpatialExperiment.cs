@@ -15,21 +15,36 @@ namespace ZoredPdaScale
         private int layer = -1;
         private Camera dedicated;
         private uGUI_PDA target;
+        private float nextLayerAttempt;
+        private bool warnedNoLayer;
 
         private void Update()
         {
             if (UnityEngine.Input.GetKeyDown(KeyCode.F11))
             {
-                requested = !requested;
-                log.LogInfo("Spatial experiment " + (requested ? "enabled" : "disabled"));
+                Toggle();
             }
             if (UnityEngine.Input.GetKeyDown(KeyCode.F12))
             {
-                useSiblingCamera = !useSiblingCamera;
-                log.LogInfo("Spatial camera mode: " + (useSiblingCamera ? "sibling" : "child"));
-                Restore();
+                ToggleMode();
             }
         }
+
+        internal void Toggle()
+        {
+            requested = !requested;
+            nextLayerAttempt = 0f;
+            warnedNoLayer = false;
+            log.LogInfo("Spatial experiment " + (requested ? "enabled" : "disabled"));
+        }
+        internal void ToggleMode()
+        {
+            useSiblingCamera = !useSiblingCamera;
+            log.LogInfo("Spatial camera mode: " + (useSiblingCamera ? "sibling" : "child"));
+            Restore();
+        }
+        internal string CameraStatus { get { return requested ? "On" : "Off"; } }
+        internal string CameraMode { get { return useSiblingCamera ? "Sibling" : "Child"; } }
 
         private void LateUpdate()
         {
@@ -53,11 +68,12 @@ namespace ZoredPdaScale
                 return;
             }
             if (dedicated != null && (target != pda || dedicated.transform.parent != (useSiblingCamera ? uiCamera.transform.parent : uiCamera.transform))) Restore();
-            if (dedicated == null && !StartExperiment(pda, uiCamera, worldCamera))
+            if (dedicated == null && MenuControlRules.ShouldRetryCamera(Time.unscaledTime, nextLayerAttempt) && !StartExperiment(pda, uiCamera, worldCamera))
             {
-                requested = false;
+                nextLayerAttempt = Time.unscaledTime + 2f;
                 return;
             }
+            if (dedicated == null) return;
             foreach (var child in pda.GetComponentsInChildren<Transform>(true))
             {
                 if (child == null || child.gameObject.layer != 5) continue;
@@ -72,7 +88,13 @@ namespace ZoredPdaScale
             foreach (var camera in Camera.allCameras) used |= camera.cullingMask;
             foreach (var obj in FindObjectsOfType<Transform>()) used |= 1 << obj.gameObject.layer;
             for (int i = 8; i < 31; i++) if ((used & (1 << i)) == 0) { layer = i; break; }
-            if (layer < 0) { log.LogWarning("No unused layer; spatial experiment not started."); return false; }
+            if (layer < 0)
+            {
+                if (!warnedNoLayer) log.LogWarning("No unused layer; retrying PDA camera while requested.");
+                warnedNoLayer = true;
+                return false;
+            }
+            warnedNoLayer = false;
             var holder = new GameObject("Zored PDA Spatial Camera");
             holder.transform.SetParent(useSiblingCamera ? uiCamera.transform.parent : uiCamera.transform, false);
             dedicated = holder.AddComponent<Camera>();

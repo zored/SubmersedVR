@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add direct pause menu controls for PDA dimensions, positioning, diagnostics, camera mode and ScriptEngine reload; adjustment labels show steps from the preferred baseline.
+- Automatically reload companion settings after config file changes and start ScriptEngine’s enabled file watcher in the current session.
+- Keep the PDA camera requested and retry when no unused layer is temporarily available.
+
 - Add a PS VR2 binding for a short Options press using the Sony driver’s single-click mode; the user confirmed that it opens the pause menu. A long press still recenters VR.
 
 - Keep the PDA pointer aligned with the tracked fingertip by capturing its pose after the VR hand update; the user confirmed the pointer works in the headset.
