@@ -28,3 +28,5 @@
 - Prepare an experimental PDA-only UI ray origin at the right index fingertip, retaining controller aim and restoring the previous origin when the PDA closes; headset verification is required.
 - Add a separate PS VR2 Sense binding based on the Oculus layout, with Options assigned to the pause action; it must be selected in SteamVR and tested.
 - Extend the F10 diagnostic snapshot with PDA open/use state, model transform and player animation state for investigating intermittent PDA failures.
+
+- Recalculate the PDA interface immediately when F7/F8 changes its saved scale.

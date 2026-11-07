@@ -30,16 +30,18 @@ namespace ZoredPdaScale
 
         private void Update()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 2f);
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 2f);
+            bool scaleChanged = false;
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) { Scale.Value = Mathf.Clamp(Scale.Value - 0.1f, 0.5f, 2f); scaleChanged = true; }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) { Scale.Value = Mathf.Clamp(Scale.Value + 0.1f, 0.5f, 2f); scaleChanged = true; }
             bool offsetChanged = false;
             if (AdjustmentKey(KeyCode.J)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value - 0.01f, -0.3f, 0.3f); offsetChanged = true; }
             if (AdjustmentKey(KeyCode.L)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value + 0.01f, -0.3f, 0.3f); offsetChanged = true; }
-            if (offsetChanged)
+            if (offsetChanged || scaleChanged)
             {
                 var pda = FindObjectOfType<uGUI_PDA>();
                 if (pda != null) { var scaler = pda.GetComponent<uGUI_CanvasScaler>(); if (scaler != null) scaler.SetDirty(); }
-                Logger.LogInfo("PDA horizontal offset: " + HorizontalOffset.Value.ToString("F2") + " m");
+                if (offsetChanged) Logger.LogInfo("PDA horizontal offset: " + HorizontalOffset.Value.ToString("F2") + " m");
+                if (scaleChanged) Logger.LogInfo("PDA interface scale: " + Scale.Value.ToString("F1"));
             }
         }
 
