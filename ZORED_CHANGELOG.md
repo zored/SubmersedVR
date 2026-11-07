@@ -12,3 +12,5 @@
 - Avoid nesting the PDA rendering camera under another VR-tracked camera by default. F12 switches between sibling and original nested camera modes for live comparison; F10 records the physical PDA model hierarchy.
 
 - Enlarge the tablet mesh in its local X/Y plane while preserving thickness and the hand/screen anchor. Numpad +/- adjusts model size in-game.
+
+- Add Numpad 4/6 to shift the PDA interface horizontally and Numpad 1/3 to adjust tablet width separately, with persistent settings. The new default shifts the interface slightly and widens the tablet; verify local directions and fit in VR.
