@@ -1,9 +1,8 @@
-- Reduced the finger-scroll drag threshold from 4 cm to 5 mm for ScrollRect and Scrollbar; headset validation pending.
-
 # Zored changelog
 
 ## Unreleased
 
+- Reduced the finger-scroll drag threshold from 4 cm to 5 mm for ScrollRect and Scrollbar; headset validation pending.
 - Add experimental right-hand and head reflections on PDA glass; VR alignment, stereo and performance need checking.
 
 - Add subtle edge-faded touch ripples and static edge chips to PDA glass; mapping, stereo and VR performance need headset checks.
