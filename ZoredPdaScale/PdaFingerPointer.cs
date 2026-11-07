@@ -9,6 +9,9 @@ namespace ZoredPdaScale
     public sealed class PdaFingerPointer : MonoBehaviour
     {
         private static PdaFingerPointer active;
+        // DEBUG(ChatGPT): pose captured in LateUpdate; compare with press-time values to detect frame/transform drift.
+        private static Vector3 savedTipWorld, savedRoot, savedTabletLocal;
+        private static int savedFrame = -1;
         private Transform pointer;
         private Vector3 savedLocalPosition;
         private bool positioned;
@@ -81,7 +84,24 @@ namespace ZoredPdaScale
             pointer.position = hand.TransformPoint(straightTipInHand) - rootPosition;
             laserPose.Save(pointer.localPosition);
             tipPose.Save(pointer.parent.InverseTransformPoint(tip.position - rootPosition));
+            savedTipWorld = tip.position; savedRoot = rootPosition; savedFrame = Time.frameCount;
+            var tabletMesh = pda.transform.Find("Mesh");
+            savedTabletLocal = tabletMesh == null ? Vector3.zero : tabletMesh.InverseTransformPoint(tip.position);
             if (canMoveVisualHand) visualContact.Apply(pda, hand, tip.position);
+        }
+        // DEBUG(ChatGPT): one line per press in LogOutput.log, prefix "Zored PDA contact precise".
+        // ageFrames>0 or tabletLocalNow!=tabletLocalSaved means the tablet moved between pose capture and input.
+        // glassUv vs uiUv (0..1 across the screen) is the direct measure of the glass-to-UI mapping error.
+        internal static string DescribeContact(PDA pda)
+        {
+            if (active == null || savedFrame < 0) return "pose unavailable";
+            var mesh = pda == null ? null : pda.transform.Find("Mesh");
+            var root = SNCameraRoot.main;
+            var rootNow = root == null ? Vector3.zero : root.transform.position;
+            var nowLocal = mesh == null ? Vector3.zero : mesh.InverseTransformPoint(savedTipWorld);
+            return "ageFrames=" + (Time.frameCount - savedFrame) + ", rootDrift=" + (rootNow - savedRoot).ToString("F5") +
+                ", tipWorld=" + savedTipWorld.ToString("F5") + ", tabletLocalSaved=" + savedTabletLocal.ToString("F5") +
+                ", tabletLocalNow=" + nowLocal.ToString("F5") + ", " + active.visualContact.Describe(mesh, savedTipWorld);
         }
         private void Restore()
         {

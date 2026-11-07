@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Log press-time glass and UI coordinates for finger touch accuracy diagnostics; not yet built or verified.
+
 - Reduced the finger-scroll drag threshold from 4 cm to 5 mm for ScrollRect and Scrollbar; headset validation pending.
 - Add experimental right-hand and head reflections on PDA glass; VR alignment, stereo and performance need checking.
 

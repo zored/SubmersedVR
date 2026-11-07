@@ -82,6 +82,16 @@ namespace ZoredPdaScale
                         var uiTip = ui == null ? Vector3.zero : ui.transform.InverseTransformPoint(tip);
                         var hitLocal = rect == null ? Vector3.zero : rect.InverseTransformPoint(hit.worldPosition);
                         Debug.Log("Zored PDA contact measurement: time=" + Time.unscaledTime.ToString("F4") + ", path=" + path + ", tipUI=" + tip.ToString("F5") + ", hitUI=" + hit.worldPosition.ToString("F5") + ", uiTip=" + uiTip.ToString("F5") + ", tabletTip=" + localTip.ToString("F5") + ", targetLocal=" + hitLocal.ToString("F5") + ", targetRect=" + (rect == null ? "none" : rect.rect.ToString()) + ", distance=" + distance.ToString("F5"));
+                        var canvas = ui == null ? null : ui.GetComponentInParent<Canvas>();
+                        var canvasRect = canvas == null ? null : canvas.rootCanvas.transform as RectTransform;
+                        var uiUv = "unavailable";
+                        if (canvasRect != null)
+                        {
+                            Vector2 c = canvasRect.InverseTransformPoint(tip);
+                            var r = canvasRect.rect;
+                            uiUv = new Vector2((c.x - r.xMin) / r.width, (c.y - r.yMin) / r.height).ToString("F4");
+                        }
+                        Debug.Log("Zored PDA contact precise: uiUv=" + uiUv + ", " + PdaFingerPointer.DescribeContact(pda));
                     }
                 }
                 setButton.Invoke(mouse, new object[] { PointerEventData.InputButton.Left,

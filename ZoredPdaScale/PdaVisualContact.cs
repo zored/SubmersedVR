@@ -28,6 +28,16 @@ namespace ZoredPdaScale
             float distance = Vector3.Dot(trackedTip - plane, normal);
             if (contact.Step(true, distance) && distance < 0f) hand.position -= normal * distance;
         }
+        // DEBUG(ChatGPT): glassUv is the fingertip projected onto the screen face, normalized over face X/Z.
+        // mode=bounds means the mesh was unreadable and the whole-model bounds stand in for the glass.
+        internal string Describe(Transform mesh, Vector3 world)
+        {
+            if (mesh == null || !valid) return "glass=unavailable";
+            var local = mesh.InverseTransformPoint(world);
+            var uv = new Vector2((local.x - face.min.x) / face.size.x, (local.z - face.min.z) / face.size.z);
+            return "glassMode=" + (useBoundsFace ? "bounds" : "submesh") + ", faceMin=" + face.min.ToString("F5") + ", faceMax=" + face.max.ToString("F5") +
+                ", glassUv=" + uv.ToString("F4") + ", glassDepthLocal=" + (local.y - face.center.y).ToString("F5");
+        }
         private void LoadFace(MeshRenderer current)
         {
             Reset(); renderer = current;
