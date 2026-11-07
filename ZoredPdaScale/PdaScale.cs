@@ -9,8 +9,10 @@ namespace ZoredPdaScale
     [BepInDependency("SubmersedVR")]
     public sealed class Plugin : BaseUnityPlugin
     {
+        internal static ConfigEntry<bool> ChestGesture;
         internal static ConfigEntry<float> Scale;
         internal static ConfigEntry<float> HorizontalOffset;
+        internal static ConfigEntry<float> TabletShift;
         private Harmony harmony;
         private System.IO.FileSystemWatcher configWatcher;
         private int configChanged;
@@ -18,10 +20,27 @@ namespace ZoredPdaScale
 
         private void Awake()
         {
-            Scale = Config.Bind("PDA", "Scale", 2.0f, "PDA size multiplier. F7/F8 adjust it while playing.");
+            StartCoroutine(InitializeWhenReady());
+        }
+
+        private System.Collections.IEnumerator InitializeWhenReady()
+        {
+            BepInEx.PluginInfo dependency;
+            while (!BepInEx.Bootstrap.Chainloader.PluginInfos.TryGetValue("SubmersedVR", out dependency) ||
+                   dependency == null || dependency.Instance == null ||
+                   AccessTools.TypeByName("SubmersedVR.VRHands") == null)
+                yield return null;
+            Initialize();
+        }
+
+        private void Initialize()
+        {
+            ChestGesture = Config.Bind("PDA", "ChestGesture", true, "Open the PDA with left grip below and to the left of the head.");
+            Scale = Config.Bind("PDA", "Scale", 2.205f, "PDA size multiplier. F7/F8 adjust it while playing.");
             HorizontalOffset = Config.Bind("PDA", "HorizontalOffset", 0.05f, "Horizontal UI offset in metres. J/L adjust it while the PDA is open.");
+            TabletShift = Config.Bind("PDA", "TabletShift", 0.24f, "Shift tablet and UI right as a fraction of tablet width.");
             TabletModelScale.Width = Config.Bind("PDA", "TabletWidth", 1.0f, "Additional tablet width multiplier. U/O adjust it while the PDA is open.");
-            TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 1.9f, "Tablet model size multiplier. K/I adjust it while the PDA is open.");
+            TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 2.09475f, "Tablet model size multiplier. K/I adjust it while the PDA is open.");
             var runInBackground = Config.Bind("General", "RunInBackground", true, "When enabled, turn on the game setting for background play on load. When disabled, leave the game setting unchanged; turn it off in game settings if needed.");
             if (runInBackground.Value)
             {
@@ -37,6 +56,11 @@ namespace ZoredPdaScale
             gameObject.AddComponent<DepthProbe>();
             gameObject.AddComponent<PdaSpatialExperiment>();
             gameObject.AddComponent<PdaFingerPointer>();
+            gameObject.AddComponent<ToolRecall>();
+            gameObject.AddComponent<PdaTouchFeedback>();
+            gameObject.AddComponent<PdaCloseVisibility>();
+            gameObject.AddComponent<PdaOpeningPose>();
+            gameObject.AddComponent<PdaRefraction>();
             gameObject.AddComponent<PdaMenu>();
             Logger.LogInfo("PDA scaling enabled.");
         }
@@ -81,8 +105,8 @@ namespace ZoredPdaScale
                 Logger.LogInfo("Pause diagnostic: UIMenu pressed; menu=" + (IngameMenu.main == null ? "none" : IngameMenu.main.gameObject.activeInHierarchy.ToString()));
             if (UnityEngine.Input.GetKeyDown(KeyCode.F9)) Recover(false);
             bool scaleChanged = false;
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) { Scale.Value = MenuControlRules.Adjust(Scale.Value, -0.1f, 0.5f, 2f); scaleChanged = true; }
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) { Scale.Value = MenuControlRules.Adjust(Scale.Value, 0.1f, 0.5f, 2f); scaleChanged = true; }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F7)) { Scale.Value = MenuControlRules.Adjust(Scale.Value, -0.1f, 0.5f, 3f); scaleChanged = true; }
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F8)) { Scale.Value = MenuControlRules.Adjust(Scale.Value, 0.1f, 0.5f, 3f); scaleChanged = true; }
             bool offsetChanged = false;
             if (AdjustmentKey(KeyCode.J)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value - 0.01f, -0.3f, 0.3f); offsetChanged = true; }
             if (AdjustmentKey(KeyCode.L)) { HorizontalOffset.Value = Mathf.Clamp(HorizontalOffset.Value + 0.01f, -0.3f, 0.3f); offsetChanged = true; }
@@ -125,14 +149,27 @@ namespace ZoredPdaScale
             else Logger.LogInfo("Recovery skipped: PDA, focus, time scale or active pause conditions do not match.");
         }
 
+        internal static void AdjustPdaSize(bool increase)
+        {
+            float ui, tablet;
+            MenuControlRules.AdjustPdaSize(Scale.Value, TabletModelScale.Scale.Value, increase, out ui, out tablet);
+            Scale.Value = ui;
+            TabletModelScale.Scale.Value = tablet;
+            RefreshPda();
+        }
         internal static void AdjustInterface(float delta)
         {
-            Scale.Value = MenuControlRules.Adjust(Scale.Value, delta, 0.5f, 2f);
+            Scale.Value = MenuControlRules.Adjust(Scale.Value, delta, 0.5f, 3f);
             RefreshPda();
         }
         internal static void AdjustOffset(float delta)
         {
             HorizontalOffset.Value = MenuControlRules.Adjust(HorizontalOffset.Value, delta, -0.3f, 0.3f);
+            RefreshPda();
+        }
+        internal static void AdjustTabletShift(float delta)
+        {
+            TabletShift.Value = MenuControlRules.Adjust(TabletShift.Value, delta, -.5f, .5f);
             RefreshPda();
         }
         private static void RefreshPda()
@@ -150,7 +187,10 @@ namespace ZoredPdaScale
         private void OnDestroy()
         {
             if (configWatcher != null) { configWatcher.EnableRaisingEvents = false; configWatcher.Dispose(); configWatcher = null; }
-            harmony.UnpatchSelf();
+            PdaHideLaser.Restore();
+            PdaFingerTouch.Cancel();
+            PdaTouchProbe.Dispose();
+            if (harmony != null) harmony.UnpatchSelf();
             PdaScalePatch.Restore();
         }
     }
@@ -181,9 +221,11 @@ namespace ZoredPdaScale
                 current = __instance;
                 originalScale = __instance.transform.localScale;
             }
-            __instance.transform.localScale = originalScale * Mathf.Clamp(Plugin.Scale.Value, 0.5f, 2f);
+            __instance.transform.localScale = originalScale * Mathf.Clamp(Plugin.Scale.Value, 0.5f, 3f);
             // SubmersedVR positions the canvas in UI space before this postfix.
-            __instance.transform.position += __instance.transform.right * Mathf.Clamp(Plugin.HorizontalOffset.Value, -0.3f, 0.3f);
+            __instance.transform.position += __instance.transform.right * (Mathf.Clamp(Plugin.HorizontalOffset.Value, -0.3f, 0.3f) + TabletModelScale.CurrentShift);
         }
     }
 }
+
+

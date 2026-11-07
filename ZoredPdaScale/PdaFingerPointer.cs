@@ -4,34 +4,48 @@ using UnityEngine;
 
 namespace ZoredPdaScale
 {
-    // Keep the controller's aim direction, but move the UI ray origin to the animated fingertip.
+    // Anchor the laser to the palm at the uncurled index fingertip position.
+    // Cache the actual animated fingertip separately for direct touch.
     public sealed class PdaFingerPointer : MonoBehaviour
     {
         private static PdaFingerPointer active;
         private Transform pointer;
         private Vector3 savedLocalPosition;
         private bool positioned;
-        private readonly FingerPoseCache<Vector3> pose = new FingerPoseCache<Vector3>();
+        private readonly PdaVisualContact visualContact = new PdaVisualContact();
+        private readonly FingerPoseCache<Vector3> laserPose = new FingerPoseCache<Vector3>();
+        private readonly FingerPoseCache<Vector3> tipPose = new FingerPoseCache<Vector3>();
         private static readonly System.Type rigType = AccessTools.TypeByName("SubmersedVR.VRCameraRig");
         private static readonly FieldInfo instanceField = rigType == null ? null : AccessTools.Field(rigType, "instance");
         private static readonly FieldInfo pointerField = rigType == null ? null : AccessTools.Field(rigType, "laserPointerUI");
 
         private void Awake() { active = this; }
         private void OnDestroy() { Restore(); if (active == this) active = null; }
-
-        internal static void AfterHandUpdate() { if (active != null) active.Sync(); }
+        internal static void AfterHandUpdate(object instance)
+        {
+            var field = instance == null ? null : AccessTools.Field(instance.GetType(), "ik");
+            var ik = field == null ? null : field.GetValue(instance) as Behaviour;
+            if (active != null) active.Sync(ik != null && !ik.enabled);
+        }
         internal static void BeforeRaycast()
         {
             if (active == null) return;
             var player = Player.main;
             var pda = player == null ? null : player.GetPDA();
             if (pda == null || !pda.isInUse) { active.Restore(); return; }
-            Vector3 localPosition;
-            if (active.positioned && active.pointer != null && active.pose.TryGet(out localPosition))
-                active.pointer.localPosition = localPosition;
+            Vector3 position;
+            if (active.positioned && active.pointer != null && active.laserPose.TryGet(out position))
+                active.pointer.localPosition = position;
         }
-
-        private void Sync()
+        internal static bool TryGetTip(out Vector3 position)
+        {
+            position = Vector3.zero;
+            Vector3 local;
+            if (active == null || !active.positioned || active.pointer == null || active.pointer.parent == null || !active.tipPose.TryGet(out local)) return false;
+            position = active.pointer.parent.TransformPoint(local);
+            return true;
+        }
+        private void Sync(bool canMoveVisualHand)
         {
             var player = Player.main;
             var pda = player == null ? null : player.GetPDA();
@@ -39,15 +53,17 @@ namespace ZoredPdaScale
             var rig = instanceField == null ? null : instanceField.GetValue(null);
             var component = rig == null || pointerField == null ? null : pointerField.GetValue(rig) as Component;
             var animator = player == null ? null : player.playerAnimator;
-            Transform tip = null;
+            Transform hand = null, first = null, middle = null, tip = null;
             if (animator != null)
             {
                 const string prefix = "export_skeleton/head_rig/neck/chest/clav_R/clav_R_aim/shoulder_R/";
-                const string suffix = "hand_R/hand_R_point_base/hand_R_point_mid/hand_R_point_tip_rig";
-                tip = animator.transform.Find(prefix + suffix);
-                if (tip == null) tip = animator.transform.Find(prefix + "elbow_R/" + suffix);
+                hand = animator.transform.Find(prefix + "hand_R");
+                if (hand == null) hand = animator.transform.Find(prefix + "elbow_R/hand_R");
+                if (hand != null) first = hand.Find("hand_R_point_base");
+                if (first != null) middle = first.Find("hand_R_point_mid");
+                if (middle != null) tip = middle.Find("hand_R_point_tip_rig");
             }
-            if (pda == null || !pda.isInUse || root == null || component == null || tip == null)
+            if (pda == null || !pda.isInUse || root == null || component == null || component.transform.parent == null || hand == null || first == null || middle == null || tip == null)
             {
                 Restore();
                 return;
@@ -59,27 +75,30 @@ namespace ZoredPdaScale
                 savedLocalPosition = pointer.localPosition;
                 positioned = true;
             }
-            // SubmersedVR maps the PDA into UI space by subtracting the camera root position.
-            pointer.position = tip.position - root.transform.position;
-            pose.Save(pointer.localPosition);
+            // VRHands uses zero local Euler rotation for the uncurled index bones.
+            Vector3 straightTipInHand = PdaPalmGeometry.StraightTipInHand(first, middle, tip);
+            var rootPosition = root.transform.position;
+            pointer.position = hand.TransformPoint(straightTipInHand) - rootPosition;
+            laserPose.Save(pointer.localPosition);
+            tipPose.Save(pointer.parent.InverseTransformPoint(tip.position - rootPosition));
+            if (canMoveVisualHand) visualContact.Apply(pda, hand, tip.position);
         }
-
         private void Restore()
         {
             if (positioned && pointer != null) pointer.localPosition = savedLocalPosition;
             positioned = false;
+            visualContact.Reset();
             pointer = null;
-            pose.Clear();
+            laserPose.Clear();
+            tipPose.Clear();
         }
     }
-
     [HarmonyPatch]
     internal static class PdaFingerPointerHandUpdate
     {
         private static MethodBase TargetMethod() { return AccessTools.Method(AccessTools.TypeByName("SubmersedVR.VRHands"), "LateUpdate"); }
-        private static void Postfix() { PdaFingerPointer.AfterHandUpdate(); }
+        private static void Postfix(object __instance) { PdaFingerPointer.AfterHandUpdate(__instance); }
     }
-
     [HarmonyPatch(typeof(FPSInputModule), "GetCursorScreenPosition")]
     internal static class PdaFingerPointerRaycast
     {

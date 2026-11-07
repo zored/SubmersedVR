@@ -5,6 +5,15 @@ class MenuControlRulesTest
     static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
     static void Main()
     {
+        float ui, tablet;
+        MenuControlRules.AdjustPdaSize(2f, 1.9f, true, out ui, out tablet);
+        Check(Math.Abs(ui - 2.1f) < .0001f && Math.Abs(tablet - 1.995f) < .0001f, "increase keeps the selected relative size");
+        MenuControlRules.AdjustPdaSize(ui, tablet, false, out ui, out tablet);
+        Check(Math.Abs(ui - 2f) < .0001f && Math.Abs(tablet - 1.9f) < .0001f, "increase and decrease return to the same size");
+        MenuControlRules.AdjustPdaSize(2.99f, 2.8f, true, out ui, out tablet);
+        Check(ui <= 3.00001f && Math.Abs(ui / tablet - 2.99f / 2.8f) < .0001f, "upper boundary keeps the ratio");
+        MenuControlRules.AdjustPdaSize(.51f, .7f, false, out ui, out tablet);
+        Check(ui >= .49999f && Math.Abs(ui / tablet - .51f / .7f) < .0001f, "lower boundary keeps the ratio");
         Check(Math.Abs(MenuControlRules.Adjust(1f, 0.1f, .5f, 2f) - 1.1f) < .0001f, "increase");
         Check(MenuControlRules.Adjust(2f, .1f, .5f, 2f) == 2f, "maximum");
         Check(MenuControlRules.Adjust(.5f, -.1f, .5f, 2f) == .5f, "minimum");

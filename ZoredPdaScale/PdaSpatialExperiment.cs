@@ -10,6 +10,7 @@ namespace ZoredPdaScale
     {
         private readonly ManualLogSource log = BepInEx.Logging.Logger.CreateLogSource("Zored PDA Spatial");
         private readonly Dictionary<Transform, int> originalLayers = new Dictionary<Transform, int>();
+        private readonly Dictionary<Camera, bool> cameraMasks = new Dictionary<Camera, bool>();
         private bool requested = true;
         private bool useSiblingCamera = true;
         private int layer = -1;
@@ -17,6 +18,7 @@ namespace ZoredPdaScale
         private uGUI_PDA target;
         private float nextLayerAttempt;
         private bool warnedNoLayer;
+        private float nextCollisionCheck;
 
         private void Update()
         {
@@ -74,6 +76,12 @@ namespace ZoredPdaScale
                 return;
             }
             if (dedicated == null) return;
+            ReserveCameraLayers();
+            if (Time.unscaledTime >= nextCollisionCheck)
+            {
+                nextCollisionCheck = Time.unscaledTime + 2f;
+                if (LayerHasForeignObjects()) { Restore(); return; }
+            }
             foreach (var child in pda.GetComponentsInChildren<Transform>(true))
             {
                 if (child == null || child.gameObject.layer != 5) continue;
@@ -85,8 +93,8 @@ namespace ZoredPdaScale
         private bool StartExperiment(uGUI_PDA pda, Camera uiCamera, Camera worldCamera)
         {
             int used = 0;
-            foreach (var camera in Camera.allCameras) used |= camera.cullingMask;
-            foreach (var obj in FindObjectsOfType<Transform>()) used |= 1 << obj.gameObject.layer;
+            foreach (var obj in Resources.FindObjectsOfTypeAll<Transform>())
+                if (obj != null && obj.gameObject.scene.IsValid()) used |= 1 << obj.gameObject.layer;
             for (int i = 8; i < 31; i++) if ((used & (1 << i)) == 0) { layer = i; break; }
             if (layer < 0)
             {
@@ -103,11 +111,51 @@ namespace ZoredPdaScale
             dedicated.clearFlags = CameraClearFlags.Nothing;
             dedicated.depth = (worldCamera.depth + uiCamera.depth) / 2f;
             dedicated.enabled = true;
+            ReserveCameraLayers();
             target = pda;
             log.LogInfo("PDA-only " + (useSiblingCamera ? "sibling" : "child") + " camera started on layer " + layer + "; depth=" + dedicated.depth);
             return true;
         }
 
+        private bool LayerHasForeignObjects()
+        {
+            // FPSInputModule moves its own cursor to the current UI target's layer.
+            // It is part of this rendering path, not a layer collision.
+            var input = FindObjectOfType<FPSInputModule>();
+            var cursorField = AccessTools.Field(typeof(FPSInputModule), "_cursorCanvasGO");
+            var cursor = input == null || cursorField == null ? null : cursorField.GetValue(input) as GameObject;
+            var tooltip = FindObjectOfType<uGUI_Tooltip>();
+            foreach (var obj in Resources.FindObjectsOfTypeAll<Transform>())
+            {
+                if (obj == null || !obj.gameObject.scene.IsValid() || obj.gameObject.layer != layer || originalLayers.ContainsKey(obj)) continue;
+                if (target != null && obj.IsChildOf(target.transform))
+                {
+                    // Newly instantiated PDA elements can inherit the reserved layer.
+                    // Return them to the UI layer when the dedicated camera stops.
+                    originalLayers[obj] = 5;
+                    continue;
+                }
+                if (cursor != null && obj.IsChildOf(cursor.transform)) continue;
+                if (tooltip != null && obj.IsChildOf(tooltip.transform)) continue;
+                log.LogWarning("PDA camera layer occupied by " + obj.name + ", parent=" + (obj.parent == null ? "none" : obj.parent.name) + ", PDA child=" + (target != null && obj.IsChildOf(target.transform)) + "; retrying.");
+                return true;
+            }
+            return false;
+        }
+        // The selected layer has no scene objects. Cameras with broad masks must
+        // temporarily exclude it so only the dedicated camera draws the PDA.
+        private void ReserveCameraLayers()
+        {
+            if (layer < 0) return;
+            int bit = 1 << layer;
+            foreach (var camera in Camera.allCameras)
+            {
+                if (camera == null || camera == dedicated) continue;
+                if (!cameraMasks.ContainsKey(camera)) cameraMasks.Add(camera, (camera.cullingMask & bit) != 0);
+                else if ((camera.cullingMask & bit) != 0) cameraMasks[camera] = true;
+                if ((camera.cullingMask & bit) != 0) camera.cullingMask &= ~bit;
+            }
+        }
         private void Restore()
         {
             if (dedicated != null)
@@ -115,10 +163,17 @@ namespace ZoredPdaScale
                 dedicated.enabled = false;
                 Destroy(dedicated.gameObject);
             }
+            if (target != null && layer >= 0)
+                foreach (var child in target.GetComponentsInChildren<Transform>(true))
+                    if (child != null && child.gameObject.layer == layer && !originalLayers.ContainsKey(child))
+                        originalLayers[child] = 5;
             foreach (var entry in originalLayers)
                 if (entry.Key != null && entry.Key.gameObject.layer == layer) entry.Key.gameObject.layer = entry.Value;
             if (target != null) log.LogInfo("PDA-only camera stopped and original layers restored.");
             originalLayers.Clear();
+            if (layer >= 0) foreach (var entry in cameraMasks)
+                if (entry.Key != null && entry.Value) entry.Key.cullingMask |= 1 << layer;
+            cameraMasks.Clear();
             dedicated = null;
             target = null;
             layer = -1;

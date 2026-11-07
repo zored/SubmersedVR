@@ -19,26 +19,26 @@ namespace ZoredPdaScale
         private void Update()
         {
             if (parent == null) TryInstall();
-            if (buttons.Count >= 8 && Time.unscaledTime >= nextLabelUpdate)
+            if (buttons.Count >= 2 && Time.unscaledTime >= nextLabelUpdate)
             {
                 nextLabelUpdate = Time.unscaledTime + 0.2f;
-                int ui = MenuControlRules.Steps(Plugin.Scale.Value, 2f, .1f);
-                int offset = MenuControlRules.Steps(Plugin.HorizontalOffset.Value, .05f, .01f);
-                int size = MenuControlRules.Steps(TabletModelScale.Scale.Value, 1.9f, .1f);
-                int width = MenuControlRules.Steps(TabletModelScale.Width.Value, 1f, .1f);
-                SetLabel(0, "UI size -", ui); SetLabel(1, "UI size +", ui);
-                SetLabel(2, "UI left", offset); SetLabel(3, "UI right", offset);
-                SetLabel(4, "Tablet size -", size); SetLabel(5, "Tablet size +", size);
-                SetLabel(6, "Tablet width -", width); SetLabel(7, "Tablet width +", width);
+                var percent = Mathf.RoundToInt(Plugin.Scale.Value * 100f);
+                SetSizeLabel(0, "PDA size -", percent);
+                SetSizeLabel(1, "PDA size +", percent);
+                if (buttons.Count >= 4)
+                {
+                    var shift = Mathf.RoundToInt(Plugin.TabletShift.Value * 100f);
+                    SetSizeLabel(2, "PDA shift -", shift);
+                    SetSizeLabel(3, "PDA shift +", shift);
+                }
             }
         }
 
-        private void SetLabel(int index, string text, int value)
+        private void SetSizeLabel(int index, string text, int percent)
         {
             if (buttons[index] != null)
-                buttons[index].GetComponentInChildren<TextMeshProUGUI>(true).SetText(text + "  " + (value > 0 ? "+" : "") + value);
+                buttons[index].GetComponentInChildren<TextMeshProUGUI>(true).SetText(text + "  " + percent + "%");
         }
-
         private void TryInstall()
         {
             var menu = IngameMenu.main;
@@ -48,14 +48,10 @@ namespace ZoredPdaScale
             template = parent.GetChild(0).GetComponent<Button>();
             if (template == null || template.GetComponentInChildren<TextMeshProUGUI>(true) == null) { parent = null; return; }
 
-            Add("UI size -", () => Plugin.AdjustInterface(-0.1f));
-            Add("UI size +", () => Plugin.AdjustInterface(0.1f));
-            Add("UI left", () => Plugin.AdjustOffset(-0.01f));
-            Add("UI right", () => Plugin.AdjustOffset(0.01f));
-            Add("Tablet size -", () => TabletModelScale.Scale.Value = MenuControlRules.Adjust(TabletModelScale.Scale.Value, -0.1f, 0.5f, 3f));
-            Add("Tablet size +", () => TabletModelScale.Scale.Value = MenuControlRules.Adjust(TabletModelScale.Scale.Value, 0.1f, 0.5f, 3f));
-            Add("Tablet width -", () => TabletModelScale.Width.Value = MenuControlRules.Adjust(TabletModelScale.Width.Value, -0.1f, 0.5f, 3f));
-            Add("Tablet width +", () => TabletModelScale.Width.Value = MenuControlRules.Adjust(TabletModelScale.Width.Value, 0.1f, 0.5f, 3f));
+            Add("PDA size -", () => Plugin.AdjustPdaSize(false));
+            Add("PDA size +", () => Plugin.AdjustPdaSize(true));
+            Add("PDA shift -", () => Plugin.AdjustTabletShift(-.02f));
+            Add("PDA shift +", () => Plugin.AdjustTabletShift(.02f));
             Add("Reload (F6)", () => StartCoroutine(ReloadScripts()));
             Add("Recover (F9)", () => GetComponent<Plugin>().Recover(true));
             Add("Snapshot (F10)", () => GetComponent<DepthProbe>().Snapshot());

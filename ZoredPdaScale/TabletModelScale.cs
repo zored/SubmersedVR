@@ -14,6 +14,7 @@ namespace ZoredPdaScale
         private Vector3 meshCenter;
         private bool widthIsY;
         private PDA owner;
+        internal static float CurrentShift { get; private set; }
 
         private void Update()
         {
@@ -52,6 +53,24 @@ namespace ZoredPdaScale
             // Compensate for the mesh pivot so its bounds center stays in place.
             mesh.localScale = newScale;
             mesh.localPosition = originalPosition + mesh.localRotation * Vector3.Scale(meshCenter, originalScale - newScale);
+            var ui = FindObjectOfType<uGUI_PDA>();
+            var currentFilter = mesh.GetComponent<MeshFilter>();
+            if (ui != null && currentFilter != null && currentFilter.sharedMesh != null)
+            {
+                var right = ui.transform.right.normalized;
+                var size = currentFilter.sharedMesh.bounds.size;
+                float faceWidth = Mathf.Abs(Vector3.Dot(mesh.TransformVector(new Vector3(size.x, 0f, 0f)), right))
+                    + Mathf.Abs(Vector3.Dot(mesh.TransformVector(new Vector3(0f, size.y, 0f)), right))
+                    + Mathf.Abs(Vector3.Dot(mesh.TransformVector(new Vector3(0f, 0f, size.z)), right));
+                float shift = faceWidth * Mathf.Clamp(Plugin.TabletShift.Value, -.5f, .5f);
+                mesh.position += right * shift;
+                if (Mathf.Abs(CurrentShift - shift) > .00001f)
+                {
+                    CurrentShift = shift;
+                    var scaler = ui.GetComponent<uGUI_CanvasScaler>();
+                    if (scaler != null) scaler.SetDirty();
+                }
+            }
         }
 
         private void Restore()
@@ -59,8 +78,10 @@ namespace ZoredPdaScale
             if (mesh != null) { mesh.localScale = originalScale; mesh.localPosition = originalPosition; }
             mesh = null;
             owner = null;
+            CurrentShift = 0f;
         }
 
         private void OnDestroy() { Restore(); }
     }
 }
+

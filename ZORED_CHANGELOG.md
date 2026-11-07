@@ -1,6 +1,31 @@
+- Reduced the finger-scroll drag threshold from 4 cm to 5 mm for ScrollRect and Scrollbar; headset validation pending.
+
 # Zored changelog
 
 ## Unreleased
+
+- Add experimental right-hand and head reflections on PDA glass; VR alignment, stereo and performance need checking.
+
+- Add subtle edge-faded touch ripples and static edge chips to PDA glass; mapping, stereo and VR performance need headset checks.
+
+- Hide the UI laser while using the PDA; retain interaction and restore it in the pause menu.
+- Soften and darken PDA glass with smooth refraction waves and a mild blur.
+- Add a separate delayed script bootstrap and pause-menu activation button; fresh-start verification is pending.
+
+- Prepare an experimental screen-only refractive glass material, with fallback to the original if the shader cannot be loaded. Unity 2019.4.41-to-2019.4.36 bundle compatibility and stereo rendering need headset testing.
+
+- Replace the separate PDA size and alignment menu controls with proportional PDA size decrease/increase, retaining the saved width and offset; headset validation is pending.
+
+- Support finger press, hold, release and dragging for PDA scrolling while preserving controller input; the player confirmed scrolling and the adjusted touch response in VR.
+
+- Skip the observed PDA opening pose transition and hide the model and canvas together on close while preserving PDA timing; the player confirmed the result in VR.
+
+- Wait for SubmersedVR before initializing the companion, allowing ScriptEngine startup loading; the next fresh game start still needs verification.
+- Avoid mistaking the game's cursor and tooltip for foreign occupants of the PDA camera layer.
+
+- Prepare experimental direct fingertip presses with proximity/press colors and right-controller feedback; extended probing, controller interaction, and both-eye rendering still need headset verification.
+- Reserve an unused PDA layer even when other cameras use broad culling masks, restoring those masks afterward; verify camera isolation and hand visibility in VR.
+- Prepare Options + triangle diagnostic snapshots using existing actions, and hide the tablet mesh during the existing closing sequence; verify both in VR.
 
 - Add direct pause menu controls for PDA dimensions, positioning, diagnostics, camera mode and ScriptEngine reload; adjustment labels show steps from the preferred baseline.
 - Automatically reload companion settings after config file changes and start ScriptEngine’s enabled file watcher in the current session.
@@ -47,3 +72,15 @@
 - Extend F10 snapshots with UI pointer, raycast result and PDA canvas positions to investigate cursor drift.
 
 - Enable the game's run-in-background setting when the companion loads, configurable in General/RunInBackground; F10 also records both background settings. Background VR testing is ongoing.
+
+- Added separate optional BepInEx auto-load plugin for the most recent save after startup initialization. Built and installed locally; fresh game startup and VR behavior remain unverified. Disable through BepInEx config or remove the separate plugin DLL.
+
+- Added visual fingertip constraint against the tablet face and a separate pause-menu tablet/UI horizontal shift control. Deep held touches continue to use the tracked finger. Requires headset validation; mesh-bounds fallback is approximate.
+
+- Set PDA defaults to the player's current interface scale 2.205, tablet scale 2.09475, and tablet shift 24%; existing saved settings remain authoritative.
+
+- Expanded F10 diagnostic snapshots with tracked fingertip, tablet geometry, and the last touch probe result for alignment investigation.
+
+- Log contact positions and the full UI target path at finger press for alignment diagnostics.
+
+- Hide the tablet and PDA interface during the brief initial opening pose and reveal them after the pose settles, avoiding a visible positional jump.
