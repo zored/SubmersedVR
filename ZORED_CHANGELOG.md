@@ -30,3 +30,5 @@
 - Extend the F10 diagnostic snapshot with PDA open/use state, model transform and player animation state for investigating intermittent PDA failures.
 
 - Recalculate the PDA interface immediately when F7/F8 changes its saved scale.
+
+- Include game time, focus and animator transition details in F10 snapshots to investigate PDA hangs after switching Windows applications.

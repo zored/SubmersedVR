@@ -19,12 +19,14 @@ namespace ZoredPdaScale
             if (gamePda != null)
             {
                 log.LogInfo("PDA state: isInUse=" + gamePda.isInUse + ", isOpen=" + gamePda.isOpen + ", active=" + gamePda.gameObject.activeInHierarchy);
+                log.LogInfo("PDA timing: timeScale=" + Time.timeScale + ", time=" + Time.time + ", unscaledTime=" + Time.unscaledTime + ", focused=" + Application.isFocused);
                 log.LogInfo("PDA object: " + gamePda.name + ", localPosition=" + gamePda.transform.localPosition + ", localRotation=" + gamePda.transform.localEulerAngles + ", scale=" + gamePda.transform.localScale);
                 var animator = player.playerAnimator;
                 if (animator != null && animator.layerCount > 0)
                 {
                     var state = animator.GetCurrentAnimatorStateInfo(0);
                     log.LogInfo("PDA player animation: state=" + state.fullPathHash + ", normalizedTime=" + state.normalizedTime + ", inTransition=" + animator.IsInTransition(0));
+                    log.LogInfo("PDA animator: enabled=" + animator.enabled + ", active=" + animator.gameObject.activeInHierarchy + ", speed=" + animator.speed + ", updateMode=" + animator.updateMode + ", nextState=" + animator.GetNextAnimatorStateInfo(0).fullPathHash + ", transitionTime=" + animator.GetAnimatorTransitionInfo(0).normalizedTime);
                 }
                 var anchor = gamePda.screenAnchor;
                 for (int i = 0; anchor != null && i < 8; i++, anchor = anchor.parent)
