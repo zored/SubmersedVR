@@ -22,3 +22,5 @@
 - Prepare an opt-in ScriptEngine build mode for F6 reloads and restore PDA UI state when unloading; in-game compatibility remains to be verified.
 
 - Correct tablet width adjustment after in-game testing identified X as the height axis; select width from the remaining face dimensions and preserve thickness.
+
+- Set the tested PDA defaults to interface scale 2.0, horizontal offset 0.05, tablet scale 1.9 and width 1.0; preserve existing saved settings.

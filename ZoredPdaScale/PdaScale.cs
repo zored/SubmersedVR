@@ -16,15 +16,9 @@ namespace ZoredPdaScale
         private void Awake()
         {
             Scale = Config.Bind("PDA", "Scale", 2.0f, "PDA size multiplier. F7/F8 adjust it while playing.");
-            HorizontalOffset = Config.Bind("PDA", "HorizontalOffset", 0.02f, "Horizontal UI offset in metres. J/L adjust it while the PDA is open.");
-            TabletModelScale.Width = Config.Bind("PDA", "TabletWidth", 1.2f, "Additional tablet width multiplier. U/O adjust it while the PDA is open.");
-            var widthAxisCorrected = Config.Bind("PDA", "WidthAxisCorrectionApplied", false, "Tracks the one-time width calibration after correcting the tablet axes.");
-            if (!widthAxisCorrected.Value)
-            {
-                TabletModelScale.Width.Value = 1.6f;
-                widthAxisCorrected.Value = true;
-            }
-            TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 2.0f, "Tablet model size multiplier. K/I adjust it while the PDA is open.");
+            HorizontalOffset = Config.Bind("PDA", "HorizontalOffset", 0.05f, "Horizontal UI offset in metres. J/L adjust it while the PDA is open.");
+            TabletModelScale.Width = Config.Bind("PDA", "TabletWidth", 1.0f, "Additional tablet width multiplier. U/O adjust it while the PDA is open.");
+            TabletModelScale.Scale = Config.Bind("PDA", "TabletModelScale", 1.9f, "Tablet model size multiplier. K/I adjust it while the PDA is open.");
             harmony = new Harmony("zored.submersedvr.pdascale");
             harmony.PatchAll();
             gameObject.AddComponent<TabletModelScale>();
