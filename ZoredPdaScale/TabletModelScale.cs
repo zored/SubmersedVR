@@ -12,7 +12,7 @@ namespace ZoredPdaScale
         private Vector3 originalScale;
         private Vector3 originalPosition;
         private Vector3 meshCenter;
-        private bool widthIsX;
+        private bool widthIsY;
         private PDA owner;
 
         private void Update()
@@ -40,13 +40,15 @@ namespace ZoredPdaScale
                 var filter = mesh.GetComponent<MeshFilter>();
                 if (filter == null || filter.sharedMesh == null) { Debug.LogWarning("Zored PDA: tablet mesh bounds unavailable; scaling skipped."); mesh = null; owner = null; return; }
                 meshCenter = filter.sharedMesh.bounds.center;
-                var screenRight = pda.screenAnchor != null ? pda.screenAnchor.right : pda.transform.right;
-                widthIsX = Mathf.Abs(Vector3.Dot(mesh.right, screenRight)) >= Mathf.Abs(Vector3.Dot(mesh.up, screenRight));
-                Debug.Log("Zored PDA: width axis=" + (widthIsX ? "X" : "Y") + ", mesh center=" + meshCenter);
+                // In this model X is height. Of the remaining axes the larger
+                // dimension is the tablet face; the smaller is its thickness.
+                var dimensions = Vector3.Scale(filter.sharedMesh.bounds.size, originalScale);
+                widthIsY = Mathf.Abs(dimensions.y) >= Mathf.Abs(dimensions.z);
+                Debug.Log("Zored PDA: height axis=X, width axis=" + (widthIsY ? "Y" : "Z") + ", mesh center=" + meshCenter + ", dimensions=" + dimensions);
             }
             var scale = Mathf.Clamp(Scale.Value, 0.5f, 3f);
             var width = Mathf.Clamp(Width.Value, 0.5f, 3f);
-            var newScale = Vector3.Scale(originalScale, widthIsX ? new Vector3(scale * width, scale, 1f) : new Vector3(scale, scale * width, 1f));
+            var newScale = Vector3.Scale(originalScale, widthIsY ? new Vector3(scale, scale * width, 1f) : new Vector3(scale, 1f, scale * width));
             // Compensate for the mesh pivot so its bounds center stays in place.
             mesh.localScale = newScale;
             mesh.localPosition = originalPosition + mesh.localRotation * Vector3.Scale(meshCenter, originalScale - newScale);
