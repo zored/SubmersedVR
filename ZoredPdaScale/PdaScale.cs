@@ -24,6 +24,7 @@ namespace ZoredPdaScale
             gameObject.AddComponent<TabletModelScale>();
             gameObject.AddComponent<DepthProbe>();
             gameObject.AddComponent<PdaSpatialExperiment>();
+            gameObject.AddComponent<PdaFingerPointer>();
             Logger.LogInfo("PDA scaling enabled.");
         }
 

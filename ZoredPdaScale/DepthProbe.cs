@@ -18,7 +18,14 @@ namespace ZoredPdaScale
             var gamePda = player == null ? null : player.GetPDA();
             if (gamePda != null)
             {
-                log.LogInfo("PDA object: " + gamePda.name + ", scale=" + gamePda.transform.localScale);
+                log.LogInfo("PDA state: isInUse=" + gamePda.isInUse + ", isOpen=" + gamePda.isOpen + ", active=" + gamePda.gameObject.activeInHierarchy);
+                log.LogInfo("PDA object: " + gamePda.name + ", localPosition=" + gamePda.transform.localPosition + ", localRotation=" + gamePda.transform.localEulerAngles + ", scale=" + gamePda.transform.localScale);
+                var animator = player.playerAnimator;
+                if (animator != null && animator.layerCount > 0)
+                {
+                    var state = animator.GetCurrentAnimatorStateInfo(0);
+                    log.LogInfo("PDA player animation: state=" + state.fullPathHash + ", normalizedTime=" + state.normalizedTime + ", inTransition=" + animator.IsInTransition(0));
+                }
                 var anchor = gamePda.screenAnchor;
                 for (int i = 0; anchor != null && i < 8; i++, anchor = anchor.parent)
                     log.LogInfo("PDA anchor ancestor " + i + ": " + anchor.name + ", scale=" + anchor.localScale);

@@ -24,3 +24,7 @@
 - Correct tablet width adjustment after in-game testing identified X as the height axis; select width from the remaining face dimensions and preserve thickness.
 
 - Set the tested PDA defaults to interface scale 2.0, horizontal offset 0.05, tablet scale 1.9 and width 1.0; preserve existing saved settings.
+
+- Prepare an experimental PDA-only UI ray origin at the right index fingertip, retaining controller aim and restoring the previous origin when the PDA closes; headset verification is required.
+- Add a separate PS VR2 Sense binding based on the Oculus layout, with Options assigned to the pause action; it must be selected in SteamVR and tested.
+- Extend the F10 diagnostic snapshot with PDA open/use state, model transform and player animation state for investigating intermittent PDA failures.
