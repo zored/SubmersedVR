@@ -34,3 +34,5 @@
 - Include game time, focus and animator transition details in F10 snapshots to investigate PDA hangs after switching Windows applications.
 
 - Add F9 as a manual recovery for a stuck PDA when the game is focused, time is stopped and no game pause reason is active; record freeze reasons in F10 snapshots.
+
+- Extend F10 snapshots with UI pointer, raycast result and PDA canvas positions to investigate cursor drift.

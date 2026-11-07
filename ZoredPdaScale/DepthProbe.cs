@@ -41,7 +41,27 @@ namespace ZoredPdaScale
             {
                 log.LogInfo("Camera " + camera.name + ": depth=" + camera.depth + ", clear=" + camera.clearFlags + ", mask=" + camera.cullingMask + ", stereo=" + camera.stereoTargetEye + ", target=" + (camera.targetTexture == null ? "screen" : camera.targetTexture.name));
             }
+            var rigType = HarmonyLib.AccessTools.TypeByName("SubmersedVR.VRCameraRig");
+            var rigField = rigType == null ? null : HarmonyLib.AccessTools.Field(rigType, "instance");
+            var pointerField = rigType == null ? null : HarmonyLib.AccessTools.Field(rigType, "laserPointerUI");
+            var rig = rigField == null ? null : rigField.GetValue(null);
+            var pointer = rig == null || pointerField == null ? null : pointerField.GetValue(rig) as Component;
+            var input = FindObjectOfType<FPSInputModule>();
+            if (pointer != null)
+            {
+                var eventCamera = pointer.GetComponent<Camera>();
+                log.LogInfo("Pointer origin=" + pointer.transform.position + ", forward=" + pointer.transform.forward + ", rotation=" + pointer.transform.eulerAngles + ", camera=" + (eventCamera == null ? "none" : eventCamera.name) + ", root=" + (SNCameraRoot.main == null ? "none" : SNCameraRoot.main.transform.position.ToString()));
+            }
+            if (input != null)
+            {
+                var hitField = HarmonyLib.AccessTools.Field(typeof(FPSInputModule), "lastRaycastResult");
+                var timeField = HarmonyLib.AccessTools.Field(typeof(FPSInputModule), "lastValidRaycastTime");
+                var hit = hitField == null ? default(UnityEngine.EventSystems.RaycastResult) : (UnityEngine.EventSystems.RaycastResult)hitField.GetValue(input);
+                var hitTime = timeField == null ? 0f : (float)timeField.GetValue(input);
+                log.LogInfo("Pointer hit: object=" + (hit.gameObject == null ? "none" : hit.gameObject.name) + ", world=" + hit.worldPosition + ", distance=" + hit.distance + ", age=" + (Time.unscaledTime - hitTime));
+            }
             var pda = FindObjectOfType<uGUI_PDA>();
+            if (pda != null) log.LogInfo("PDA UI transform: position=" + pda.transform.position + ", rotation=" + pda.transform.eulerAngles + ", scale=" + pda.transform.lossyScale);
             if (pda == null)
             {
                 log.LogWarning("PDA UI not found; open the PDA and press F10 again.");
