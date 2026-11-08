@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix stereo reflection texture selection in multi-pass VR; the player confirmed the hand reflection is visible in both eyes. An extra hand-shaped image remains under investigation.
+
 - Recover stale registrations of destroyed PDA scripts when loading or switching saves, preventing duplicate GUID errors; bootstrap update requires a game restart.
 
 - Reload the companion by holding L1 and R1 for three seconds while the PDA is open; the player confirmed this works when R1 is held before L1.

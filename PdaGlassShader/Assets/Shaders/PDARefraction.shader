@@ -107,12 +107,8 @@ Shader "Zored/PDARefraction"
                 tint += surface * .04 + emission * .08 + fresnel * .06 + chip * 0.07 + ripple * 0.055;
                 float2 reflectedUV = i.reflectionPos.xy / i.reflectionPos.w;
                 fixed4 reflection;
-                #if defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED) || defined(UNITY_STEREO_MULTIVIEW_ENABLED)
-                    if (unity_StereoEyeIndex == 0) reflection = tex2D(_ReflectionLeft, reflectedUV) * 0.5 + (tex2D(_ReflectionLeft, reflectedUV + float2(0.007,0)) + tex2D(_ReflectionLeft, reflectedUV - float2(0.007,0))) * 0.25;
-                    else reflection = tex2D(_ReflectionRight, reflectedUV) * 0.5 + (tex2D(_ReflectionRight, reflectedUV + float2(0.007,0)) + tex2D(_ReflectionRight, reflectedUV - float2(0.007,0))) * 0.25;
-                #else
-                    reflection = tex2D(_ReflectionLeft, reflectedUV) * 0.5 + (tex2D(_ReflectionLeft, reflectedUV + float2(0.007,0)) + tex2D(_ReflectionLeft, reflectedUV - float2(0.007,0))) * 0.25;
-                #endif
+                if (unity_StereoEyeIndex == 0) reflection = tex2D(_ReflectionLeft, reflectedUV) * 0.5 + (tex2D(_ReflectionLeft, reflectedUV + float2(0.007,0)) + tex2D(_ReflectionLeft, reflectedUV - float2(0.007,0))) * 0.25;
+                else reflection = tex2D(_ReflectionRight, reflectedUV) * 0.5 + (tex2D(_ReflectionRight, reflectedUV + float2(0.007,0)) + tex2D(_ReflectionRight, reflectedUV - float2(0.007,0))) * 0.25;
                 tint = lerp(tint, reflection.rgb, saturate(reflection.a * _ReflectionEnabled));
                 return fixed4(tint, 1);
             }

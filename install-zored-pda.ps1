@@ -50,7 +50,7 @@ if ($HotReload) {
     if ($updatedConfig -ne $configText) { [IO.File]::WriteAllText($scriptConfig, $updatedConfig, (New-Object System.Text.UTF8Encoding($false))) }
     $glassBundle = Join-Path $PSScriptRoot 'PdaGlassShader\ZoredPdaGlass.bundle'
     if (-not (Test-Path -LiteralPath $glassBundle)) { throw 'Glass shader bundle not found; existing plugin was left untouched.' }
-    Copy-Item -LiteralPath $glassBundle -Destination (Join-Path $pluginDir 'ZoredPdaGlass-v6.bundle') -Force
+    Copy-Item -LiteralPath $glassBundle -Destination (Join-Path $pluginDir 'ZoredPdaGlass-v7.bundle') -Force
     $scripts = Join-Path $game 'BepInEx\scripts'
     New-Item -ItemType Directory -Force -Path $scripts | Out-Null
     Copy-Item -LiteralPath ([IO.Path]::ChangeExtension($output, '.pdb')) -Destination (Join-Path $scripts 'ZoredPdaScale.pdb') -Force
@@ -62,7 +62,7 @@ if (Test-Path -LiteralPath (Join-Path $game 'BepInEx\scripts\ZoredPdaScale.dll')
 if (Get-Process -Name Subnautica -ErrorAction SilentlyContinue) { throw 'Close Subnautica before installing; build succeeded.' }
 $glassBundle = Join-Path $PSScriptRoot 'PdaGlassShader\ZoredPdaGlass.bundle'
 if (-not (Test-Path -LiteralPath $glassBundle)) { throw 'Glass shader bundle not found; existing plugin was left untouched.' }
-Copy-Item -LiteralPath $glassBundle -Destination (Join-Path $pluginDir 'ZoredPdaGlass-v6.bundle') -Force
+Copy-Item -LiteralPath $glassBundle -Destination (Join-Path $pluginDir 'ZoredPdaGlass-v7.bundle') -Force
 $destination = Join-Path $pluginDir 'ZoredPdaScale.dll'
 if (Test-Path -LiteralPath $destination) { Copy-Item -LiteralPath $destination -Destination "$destination.bak" -Force }
 Copy-Item -LiteralPath $output -Destination $destination -Force
