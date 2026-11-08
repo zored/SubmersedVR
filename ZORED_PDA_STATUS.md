@@ -5,6 +5,7 @@
 
 ## Reflection investigation
 
+- The existing low-poly head silhouette (192 triangles) was confirmed visible by the player after tilting the PDA like a mirror. A one-time head-only capture recorded 467 left-eye and 466 right-eye pixels (alpha 23/255). At the earlier tablet angle its projected center was below the capture frame and both eye textures contained no head pixels. Diagnostic capture was removed; no new persistent camera or drawing pass was added. Eye-by-eye appearance and performance have not been independently measured.
 - v8 halves base refraction strength and reduces the background blur from five samples to three; touch ripples and reflections remain. Unity 2019.4.41 reported both shaders supported without errors. Verify extra hand image, appearance, both eyes and frame time in the headset; GPU improvement is not measured.
 - Isolation test replaced the refracted GrabPass background with a solid dark color while keeping mirror reflection. The player reported the extra hand-shaped copy disappeared, tying it to the grabbed background path; the test did not distinguish displacement/blur from the undistorted captured hand. Normal v7 glass was restored.
 - The v7 glass shader selects the correct reflection texture for each eye in multi-pass. The player confirmed the hand reflection is visible in both eyes; the additional hand-shaped image remains. Built and checked in Unity 2019.4.41; loaded in the running game. Head reflection and apparent depth remain to be assessed.
