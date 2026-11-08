@@ -1,5 +1,7 @@
 ## Reflection investigation
 
+- After a fresh game launch, the player confirmed the mirror-like hand reflection is visible only in the left eye, while an additional hand-shaped image inside the tablet is visible in both eyes. GrabPass refraction may account for the latter, but this has not been isolated experimentally. The game launches after a computer restart.
+- Retested Unity bundle build after the restart: Unity 2019.4.41 still reports no valid license. No revised shader bundle was produced.
 - Forward capture produced nonzero alpha in both eye textures. The player saw the pale silhouette in the left eye; the installed build now uses a warmer flat hand tint. Headset verification of that tint and both eyes remains open.
 - The game reports multi-pass stereo; the existing glass shader chooses the left texture for that mode. A shader correction was investigated but the local Unity editor reported no valid license, so no new bundle was built or installed. The right-eye appearance remains unresolved.
 
