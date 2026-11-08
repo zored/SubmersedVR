@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reduce base glass refraction strength and use three background blur samples instead of five; visual quality and VR frame time need headset validation.
+
 - Fix stereo reflection texture selection in multi-pass VR; the player confirmed the hand reflection is visible in both eyes. An extra hand-shaped image remains under investigation.
 
 - Recover stale registrations of destroyed PDA scripts when loading or switching saves, preventing duplicate GUID errors; bootstrap update requires a game restart.

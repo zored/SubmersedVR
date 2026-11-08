@@ -33,7 +33,7 @@ namespace ZoredPdaScale
         private void Awake()
         {
             active = this;
-            var path = Path.Combine(Paths.BepInExRootPath, "plugins", "ZoredPdaGlass-v7.bundle");
+            var path = Path.Combine(Paths.BepInExRootPath, "plugins", "ZoredPdaGlass-v8.bundle");
             try
             {
                 if (!File.Exists(path)) { Debug.LogWarning("Zored PDA glass: bundle not found; retaining original material."); unavailable = true; return; }

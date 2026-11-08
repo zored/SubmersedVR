@@ -5,6 +5,7 @@
 
 ## Reflection investigation
 
+- v8 halves base refraction strength and reduces the background blur from five samples to three; touch ripples and reflections remain. Unity 2019.4.41 reported both shaders supported without errors. Verify extra hand image, appearance, both eyes and frame time in the headset; GPU improvement is not measured.
 - Isolation test replaced the refracted GrabPass background with a solid dark color while keeping mirror reflection. The player reported the extra hand-shaped copy disappeared, tying it to the grabbed background path; the test did not distinguish displacement/blur from the undistorted captured hand. Normal v7 glass was restored.
 - The v7 glass shader selects the correct reflection texture for each eye in multi-pass. The player confirmed the hand reflection is visible in both eyes; the additional hand-shaped image remains. Built and checked in Unity 2019.4.41; loaded in the running game. Head reflection and apparent depth remain to be assessed.
 - Multi-pass eye callbacks selected the matching textures, but the player still saw the mirror reflection only on the left. A diagnostic forcing the right texture for both eyes moved the visible reflection to the right. Thus both textures can produce visible reflections; camera-callback material switching did not resolve the stereo issue. The player also reported no visible head reflection. The temporary tests were removed and the previously working companion restored.

@@ -5,7 +5,7 @@ Shader "Zored/PDARefraction"
         _Color ("Glass Tint", Color) = (0.44, 0.76, 0.86, 0.22)
         _MainTex ("Original Surface", 2D) = "black" {}
         _Illum ("Original Emission", 2D) = "black" {}
-        _Strength ("Refraction Strength", Range(0, 0.03)) = 0.008
+        _Strength ("Refraction Strength", Range(0, 0.03)) = 0.004
         [HideInInspector] _ReflectionLeft ("Reflection Left", 2D) = "black" {}
         [HideInInspector] _ReflectionRight ("Reflection Right", 2D) = "black" {}
         [HideInInspector] _ReflectionEnabled ("Reflection Enabled", Float) = 0
@@ -90,12 +90,10 @@ Shader "Zored/PDARefraction"
                 float ripple = (Ripple(face, _Ripple0) + Ripple(face, _Ripple1) + Ripple(face, _Ripple2) + Ripple(face, _Ripple3)) * fade;
                 float2 offset = (normal.xy + waves * 0.18) * _Strength + waves * ripple * 0.0035;
                 float2 blurredUV = uv + offset;
-                float2 blur = float2(0.0012, 0.0012);
-                fixed3 background = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV).rgb * 0.4;
-                background += UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV + float2(blur.x, 0)).rgb * 0.15;
-                background += UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV - float2(blur.x, 0)).rgb * 0.15;
-                background += UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV + float2(0, blur.y)).rgb * 0.15;
-                background += UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV - float2(0, blur.y)).rgb * 0.15;
+                float2 blur = float2(0.0007, 0.0007);
+                fixed3 background = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV).rgb * 0.5;
+                background += UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV + blur).rgb * 0.25;
+                background += UNITY_SAMPLE_SCREENSPACE_TEXTURE(_GrabTexture, blurredUV - blur).rgb * 0.25;
                 background *= 0.86;
                 fixed3 tint = lerp(background, background * _Color.rgb, saturate(_Color.a));
                 fixed3 surface = tex2D(_MainTex, i.uv).rgb;
