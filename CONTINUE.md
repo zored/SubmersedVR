@@ -1,41 +1,24 @@
 # Continue on Windows
 
-## Player checklist
+## Next chat: taking out and releasing items
 
-Run after `git pull`, then a **fresh** game start (no F6) — this is the only way to test the bootstrap.
+Read `AGENTS.md`, this file and the top of `ZORED_PDA_STATUS.md`; inspect `git status` before editing. Work on branch `zored`. The player specifically wants this work in a **new chat**; it was not implemented in the previous chat.
 
-1. Autoload: the companion works without F6; if not, the pause menu shows `Activate PDA mod` and it works.
-2. Laser: anchored to the palm, stable when the index finger bends; hidden while the PDA is open, back in the pause menu.
-3. Touch: press, hold, release, finger scroll (starts after ~5 mm), laser drag, inventory drag.
-4. Touch accuracy: press the toolbar icons left to right, then screen corners and centre; note any icon that is missed or offset.
-5. Right hand stops at the glass while pressing and does not stick when moving the tablet.
-6. Left hand is no longer inside the tablet; `PDA shift ±` and `PDA size ±` in the pause menu work and persist.
-7. Opening: the tablet appears directly in place; closing hides the tablet and UI together.
-8. Glass: darker, smooth waves, static chips, ripple on press and while sliding; check both eyes and frame rate.
-9. Reflection of the right hand and blurred head: currently reported invisible.
-10. Chest gesture: taking the PDA from the chest.
+The player's request, preserved in Russian:
 
-Send `D:\SteamLibrary\steamapps\common\Subnautica\BepInEx\LogOutput.log` after steps 1, 4 and 9.
+> Во-первых, я хотел бы, чтобы нож не добавлялся как недавно выбранный объект, потому что я могу достать его сейчас из спины. Во-вторых, я бы хотел, что если мы достаем предмет, например, КПК или нож, или фонарь, и при этом удерживаем кнопку R1 или L1, а точнее, если касаемся любой из этих кнопок, то в случае если касание завершается и я отпускаю палец с этой кнопки, даже не нажимая ее, то предмет, который я до этого держал, должен по физике упасть и исчезнуть через пару секунд. При этом предмет прямо в момент отпускания уже не должен считаться удерживаемым мной.
 
-## Prompt for the agent
+1. Exclude the knife from the recently selected item used by recall, while preserving retrieval from behind the shoulder. Inspect `ZoredPdaScale/ToolRecall.cs`: it currently saves the item in the active slot while something is held, and its shoulder lookup recognizes both `TechType.Knife` and `TechType.HeatBlade`. Check whether the same exclusion is appropriate for the heat blade and test that selecting a knife does not overwrite the previous eligible item.
+2. Investigate the requested physical release on **touch end**, not button press or press release. It should work when taking out PDA, knife or flashlight while touching R1 or L1; on finger lift, the item previously held must immediately stop being held, fall with physics and disappear after a couple of seconds. Establish which hand and which item are meant in overlapping cases, and whether disappearance concerns only a transient visual object or an actual inventory item. Do not guess or destroy a persistent item or save. The PDA may require different handling from a normal inventory item; investigate the actual game code and confirm the intended result before a destructive interpretation.
+3. Verify whether the installed PS VR2/SteamVR stack exposes **capacitive touch** for L1/R1 independently of click. The current repository binding maps L1/R1 click to `MoveDown`/`MoveUp` and other actions; `GameInput.GetButtonHeld` therefore does not establish touch sensing. Preserve existing SteamVR bindings and user settings. Check conflicts with the chest PDA gesture, shoulder knife recall, normal movement, and the R1-then-L1 three-second reload chord. Distinguish unsupported hardware/binding capabilities from implementation bugs.
+4. Verify no loss or duplication of inventory, quickslot assignments or saves, correct immediate held state, release and physics, time-based cleanup, rapid switching, pause/menu/PDA/vehicle cases, both hands and both eyes. Explain what was tested automatically versus in the headset.
 
-```
-Continue SubmersedVR development in C:\Users\BAZA\git\github.com\zored\SubmersedVR, branch zored.
-Read AGENTS.md, ZORED_PDA_STATUS.md and CONTINUE.md first; run `git status`.
-Build: `powershell -ExecutionPolicy Bypass -File .\install-zored-pda.ps1 -BuildOnly`; load into a running game with `-HotReload`, then F6.
-The last commit added untested press-time diagnostics (not compiled on the author's machine — build first and fix compile errors).
-Never close the game, never overwrite saved settings, never change SteamVR bindings; mention a restart only when actually required.
-Commit to origin/zored after verification and record user-facing changes in ZORED_CHANGELOG.md.
+Useful entry points: `ToolRecall.cs`, `ToolRecallRules.cs`, `ChestPdaGesture.cs`, `PdaMenu.cs`, `SubmersedVR/Input/SteamVrGameInput.cs`, and `SubmersedVR/StreamingAssets/SteamVR/bindings_playstation_vr2_zored_complex.json`. Read the existing code and log; do not assume touch events or physics handling already exist.
 
-Tasks in order:
-1. Touch accuracy. Each finger press logs "Zored PDA contact measurement" and "Zored PDA contact precise".
-   Compare glassUv (fingertip projected onto the tablet screen face) with uiUv (fingertip in the PDA canvas, both 0..1).
-   - ageFrames > 0 or tabletLocalNow != tabletLocalSaved: the tablet moves between pose capture (VRHands.LateUpdate) and input; fix the timing.
-   - glassMode=bounds: the mesh is unreadable and the model bounds approximate the glass; uv is unreliable.
-   - stable offset/scale between glassUv and uiUv: implement the glass->UI mapping (finger projected onto the glass face, mapped by uv onto the canvas) behind a config flag, default off; keep press/hold/release thresholds and scrolling.
-   The earlier "finger far from tablet model" readings are probably a diagnostic artefact; the new fields confirm or refute it.
-2. Hand/head reflection is invisible. Check the one-time active/stereo log in PdaHandReflection; suspect the UI camera drawing over the glass.
-3. Verify the bootstrap autoload result from the log of a fresh start.
-4. Remove or flag the touch diagnostics in PdaFingerTouch.cs and DepthProbe.cs once accuracy is confirmed; delete the "DEBUG(ChatGPT)" comments with them.
-Report what was verified in the headset versus only built or unit-tested.
-```
+## Current state and handoff
+
+- Companion build: `powershell -ExecutionPolicy Bypass -File .\install-zored-pda.ps1 -BuildOnly`. The experimental ScriptEngine path can hot reload the companion; F6 and the R1-then-L1 three-second chord reload scripts, not the main plugin. Automatic file watching is enabled. Avoid replacing the loaded bootstrap while the game is running.
+- The user confirmed finger touch accuracy and scrolling. A fresh launch loaded the companion automatically. ScriptEngine stale registrations after a save transition were recovered; a guarded bootstrap fix was installed, but a fresh launch and save transition after installing it still need verification.
+- v8 glass uses reduced base refraction and three background blur samples; actual VR frame-time impact remains unmeasured. The player confirmed the hand reflection in both eyes with v7; an extra hand-shaped image comes from the grabbed background path. The existing low-poly head silhouette is visible when the tablet is tilted like a mirror. Its separate appearance in each eye and v8 appearance/performance remain to be verified. Do not treat old reflection/touch-debug checklist items as unfinished tasks for this new request.
+- The prior turn only ran a temporary one-time head diagnostic and removed it; the player confirmed seeing the head. Check actual diffs before touching files: line-ending metadata can make a tracked file appear modified without a content diff, and the Unity project may contain generated, untracked files.
+- Preserve the original SubmersedVR DLL, SteamVR bindings, saved preferences and the player's game/save. Never close the game. Report whether restart is required. Record user-facing changes in `ZORED_CHANGELOG.md`; verify, commit and push to `origin/zored` as instructed by `AGENTS.md`.

@@ -1,3 +1,7 @@
+## Next chat: item retrieval and touch release
+
+The player requested a new chat for the item-retrieval work. `CONTINUE.md` contains the exact request, current entry points, safety boundaries and validation criteria. Do not treat the older "next chat" notes below as current instructions; they are historical.
+
 ## ScriptEngine recovery after changing saves
 
 - After returning to the menu and loading a save, ScriptEngine retained registrations for destroyed companion and reflection-diagnostic instances, causing duplicate GUID errors. A one-time helper verified that removing only those destroyed registrations restored both scripts in the running game; a subsequent normal reload also succeeded. No game restart or save modification was required for this session.
