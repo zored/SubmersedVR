@@ -56,6 +56,18 @@ public sealed class ZoredPdaBootstrap : BaseUnityPlugin
         var engine = BepInEx.Bootstrap.Chainloader.PluginInfos.TryGetValue("com.bepis.bepinex.scriptengine", out info) ? info.Instance : null;
         var reload = type == null ? null : AccessTools.Method(type, "ReloadPlugins");
         if (engine == null || reload == null) { Logger.LogWarning("PDA activation unavailable: ScriptEngine not ready."); yield break; }
+        // ScriptEngine can outlive its manager across scene changes and leave
+        // destroyed script instances registered in Chainloader. Never remove a live instance.
+        foreach (var guid in new[] { "zored.submersedvr.pdascale", "zored.pda.reflectiondiag" })
+        {
+            PluginInfo registered;
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.TryGetValue(guid, out registered) &&
+                (registered == null || registered.Instance == null))
+            {
+                BepInEx.Bootstrap.Chainloader.PluginInfos.Remove(guid);
+                Logger.LogInfo("Removed destroyed script registration: " + guid);
+            }
+        }
         try { reload.Invoke(engine, null); Logger.LogInfo("PDA scripts activation requested."); }
         catch (Exception e) { Logger.LogWarning("PDA activation failed: " + e); }
     }

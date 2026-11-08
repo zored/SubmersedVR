@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Recover stale registrations of destroyed PDA scripts when loading or switching saves, preventing duplicate GUID errors; bootstrap update requires a game restart.
+
 - Reload the companion by holding L1 and R1 for three seconds while the PDA is open; the player confirmed this works when R1 is held before L1.
 
 - Remove temporary per-press touch measurements after the player confirmed touch accuracy and scrolling in the headset; F10 remains available for general diagnostics.

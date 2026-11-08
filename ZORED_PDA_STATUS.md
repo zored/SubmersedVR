@@ -1,3 +1,8 @@
+## ScriptEngine recovery after changing saves
+
+- After returning to the menu and loading a save, ScriptEngine retained registrations for destroyed companion and reflection-diagnostic instances, causing duplicate GUID errors. A one-time helper verified that removing only those destroyed registrations restored both scripts in the running game; a subsequent normal reload also succeeded. No game restart or save modification was required for this session.
+- The bootstrap now applies the same guarded cleanup before activation. Its updated DLL is built but must be installed while the game is closed and verified after a fresh launch and a save transition. It never removes live instances or unrelated registrations.
+
 ## Reflection investigation
 
 - After a fresh game launch, the player confirmed the mirror-like hand reflection is visible only in the left eye, while an additional hand-shaped image inside the tablet is visible in both eyes. GrabPass refraction may account for the latter, but this has not been isolated experimentally. The game launches after a computer restart.
