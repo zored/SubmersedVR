@@ -64,36 +64,6 @@ namespace ZoredPdaScale
             if (action == TouchEvent.Press || action == TouchEvent.Release)
             {
                 Debug.Log("Zored PDA touch " + (action == TouchEvent.Press ? "down" : "up") + ": " + (hit.gameObject == null ? "none" : hit.gameObject.name) + ", distance=" + distance.ToString("F4"));
-                if (action == TouchEvent.Press && hit.gameObject != null)
-                {
-                    var targetTransform = hit.gameObject.transform;
-                    string path = targetTransform.name + "[" + targetTransform.GetSiblingIndex() + "]";
-                    for (var parent = targetTransform.parent; parent != null; parent = parent.parent)
-                        path = parent.name + "[" + parent.GetSiblingIndex() + "]/" + path;
-                    var rect = targetTransform as RectTransform;
-                    var ui = hit.gameObject.GetComponentInParent<uGUI_PDA>();
-                    var root = SNCameraRoot.main;
-                    Vector3 tip;
-                    if (PdaFingerPointer.TryGetTip(out tip))
-                    {
-                        var mesh = pda == null ? null : pda.transform.Find("Mesh");
-                        var worldTip = root == null ? tip : tip + root.transform.position;
-                        var localTip = mesh == null ? Vector3.zero : mesh.InverseTransformPoint(worldTip);
-                        var uiTip = ui == null ? Vector3.zero : ui.transform.InverseTransformPoint(tip);
-                        var hitLocal = rect == null ? Vector3.zero : rect.InverseTransformPoint(hit.worldPosition);
-                        Debug.Log("Zored PDA contact measurement: time=" + Time.unscaledTime.ToString("F4") + ", path=" + path + ", tipUI=" + tip.ToString("F5") + ", hitUI=" + hit.worldPosition.ToString("F5") + ", uiTip=" + uiTip.ToString("F5") + ", tabletTip=" + localTip.ToString("F5") + ", targetLocal=" + hitLocal.ToString("F5") + ", targetRect=" + (rect == null ? "none" : rect.rect.ToString()) + ", distance=" + distance.ToString("F5"));
-                        var canvas = ui == null ? null : ui.GetComponentInParent<Canvas>();
-                        var canvasRect = canvas == null ? null : canvas.rootCanvas.transform as RectTransform;
-                        var uiUv = "unavailable";
-                        if (canvasRect != null)
-                        {
-                            Vector2 c = canvasRect.InverseTransformPoint(tip);
-                            var r = canvasRect.rect;
-                            uiUv = new Vector2((c.x - r.xMin) / r.width, (c.y - r.yMin) / r.height).ToString("F4");
-                        }
-                        Debug.Log("Zored PDA contact precise: uiUv=" + uiUv + ", " + PdaFingerPointer.DescribeContact(pda));
-                    }
-                }
                 setButton.Invoke(mouse, new object[] { PointerEventData.InputButton.Left,
                     action == TouchEvent.Press ? PointerEventData.FramePressState.Pressed : PointerEventData.FramePressState.Released, leftData });
             }

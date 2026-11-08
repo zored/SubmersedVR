@@ -1,3 +1,10 @@
+## Fresh-start and touch check, 8 November 2026
+
+- The fresh-start log shows bootstrap activation, glass shader loading and stereo reflection capture active. The player confirmed finger presses and scrolling worked without noticeable errors; the detailed temporary touch measurements were removed. The unreadable mesh made glass UV measurements approximate, and the one-frame pose age and differing tablet coordinates do not alone establish a touch fault.
+- The player reported no visible reflection. Earlier capture diagnostics reported zero alpha in both reflection textures; the current active/stereo log does not prove they contain visible pixels. The cause remains open.
+- F9 restored time after a zero-time PDA pause with no active FreezeTime reasons. The player attributed it to the paused game; the underlying transition remains unproven. The guarded recovery is unchanged.
+- The diagnostic cleanup is build-verified; it has not yet been retested in the headset.
+
 ## Experimental right-hand and head reflections
 
 - Prepared an experimental reflection of the right-hand skinned renderer, restricted to a 0.16 m region around the right hand; an indistinct ellipsoid around the view camera represents the character's head. The low-opacity reflection is softened when composited into the existing screen material. Two 256x256 off-screen textures are refreshed at most around 30 Hz when the PDA is open; no world or UI layers are changed. The effect falls back off if capture throws or shaders are unavailable. Accurate hand isolation, reflection visibility, anatomical position, both eyes, UV mapping and actual VR GPU cost require headset validation. Current UI camera may draw in front of the glass and obscure the effect.

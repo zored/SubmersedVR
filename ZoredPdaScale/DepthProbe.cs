@@ -97,25 +97,8 @@ namespace ZoredPdaScale
                     log.LogInfo("Pointer geometry: origin=" + origin.ToString("F5") + ", forward=" + direction.ToString("F5") + ", hitAlong=" + Vector3.Dot(delta, direction).ToString("F5") + ", hitOffAxis=" + Vector3.Cross(delta, direction).magnitude.ToString("F5") + ", root=" + (SNCameraRoot.main == null ? "none" : SNCameraRoot.main.transform.position.ToString("F5")));
                 }
             }
-            Vector3 diagnosticTip;
-            if (PdaFingerPointer.TryGetTip(out diagnosticTip) && SNCameraRoot.main != null)
-            {
-                var tipWorld = diagnosticTip + SNCameraRoot.main.transform.position;
-                log.LogInfo("Touch sample: " + PdaTouchProbe.DescribeTouch());
-                log.LogInfo("Finger coordinates: ui=" + diagnosticTip.ToString("F5") + ", world=" + tipWorld.ToString("F5"));
-                var mesh = gamePda == null ? null : gamePda.transform.Find("Mesh");
-                var filter = mesh == null ? null : mesh.GetComponent<MeshFilter>();
-                if (mesh != null && filter != null && filter.sharedMesh != null)
-                {
-                    var bounds = filter.sharedMesh.bounds;
-                    var local = mesh.InverseTransformPoint(tipWorld);
-                    log.LogInfo("Tablet geometry: position=" + mesh.position.ToString("F5") + ", rotation=" + mesh.rotation.ToString("F5") + ", scale=" + mesh.lossyScale.ToString("F5") + ", tipLocal=" + local.ToString("F5") + ", boundsCenter=" + bounds.center.ToString("F5") + ", boundsSize=" + bounds.size.ToString("F5"));
-                }
-            }
-            else log.LogInfo("Finger coordinates unavailable");
             var pda = FindObjectOfType<uGUI_PDA>();
             if (pda != null) log.LogInfo("PDA UI transform: position=" + pda.transform.position + ", rotation=" + pda.transform.eulerAngles + ", scale=" + pda.transform.lossyScale);
-            if (pda != null && PdaFingerPointer.TryGetTip(out diagnosticTip)) log.LogInfo("Finger UI local=" + pda.transform.InverseTransformPoint(diagnosticTip).ToString("F5"));
             if (pda != null) log.LogInfo("PDA UI precise: position=" + pda.transform.position.ToString("F5") + ", rotation=" + pda.transform.rotation.ToString("F5") + ", scale=" + pda.transform.lossyScale.ToString("F7"));
             if (pda == null)
             {

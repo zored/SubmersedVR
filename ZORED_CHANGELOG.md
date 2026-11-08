@@ -2,16 +2,16 @@
 
 ## Unreleased
 
-- Log press-time glass and UI coordinates for finger touch accuracy diagnostics; not yet built or verified.
+- Remove temporary per-press touch measurements after the player confirmed touch accuracy and scrolling in the headset; F10 remains available for general diagnostics.
 
 - Reduced the finger-scroll drag threshold from 4 cm to 5 mm for ScrollRect and Scrollbar; headset validation pending.
-- Add experimental right-hand and head reflections on PDA glass; VR alignment, stereo and performance need checking.
+- Add experimental right-hand and head reflections on PDA glass; the player reports reflections are not visible in the headset, and the cause remains under investigation.
 
 - Add subtle edge-faded touch ripples and static edge chips to PDA glass; mapping, stereo and VR performance need headset checks.
 
 - Hide the UI laser while using the PDA; retain interaction and restore it in the pause menu.
 - Soften and darken PDA glass with smooth refraction waves and a mild blur.
-- Add a separate delayed script bootstrap and pause-menu activation button; fresh-start verification is pending.
+- Add a separate delayed script bootstrap and pause-menu activation button; automatic activation was confirmed in the fresh-start log.
 
 - Prepare an experimental screen-only refractive glass material, with fallback to the original if the shader cannot be loaded. Unity 2019.4.41-to-2019.4.36 bundle compatibility and stereo rendering need headset testing.
 
