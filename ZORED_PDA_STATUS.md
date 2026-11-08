@@ -1,3 +1,12 @@
+## Reflection investigation
+
+- Forward capture produced nonzero alpha in both eye textures. The player saw the pale silhouette in the left eye; the installed build now uses a warmer flat hand tint. Headset verification of that tint and both eyes remains open.
+- The game reports multi-pass stereo; the existing glass shader chooses the left texture for that mode. A shader correction was investigated but the local Unity editor reported no valid license, so no new bundle was built or installed. The right-eye appearance remains unresolved.
+
+## Controller reload chord
+
+- Holding the existing MoveDown and MoveUp actions (L1 + R1 in the current PS VR2 binding) for three seconds with the PDA open requests ScriptEngine reload. The chord is disarmed on startup or reload until both buttons are released; no bindings are changed. Automated rule tests and compilation passed; the player and game log confirmed reload after holding R1, then L1. The chest gesture is suppressed while R1 is already held and the PDA is open.
+
 ## Fresh-start and touch check, 8 November 2026
 
 - The fresh-start log shows bootstrap activation, glass shader loading and stereo reflection capture active. The player confirmed finger presses and scrolling worked without noticeable errors; the detailed temporary touch measurements were removed. The unreadable mesh made glass UV measurements approximate, and the one-frame pose age and differing tablet coordinates do not alone establish a touch fault.

@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+- Reload the companion by holding L1 and R1 for three seconds while the PDA is open; the player confirmed this works when R1 is held before L1.
+
 - Remove temporary per-press touch measurements after the player confirmed touch accuracy and scrolling in the headset; F10 remains available for general diagnostics.
 
 - Reduced the finger-scroll drag threshold from 4 cm to 5 mm for ScrollRect and Scrollbar; headset validation pending.
-- Add experimental right-hand and head reflections on PDA glass; the player reports reflections are not visible in the headset, and the cause remains under investigation.
+- Render the experimental reflection capture in Forward mode and give the hand silhouette a warm tint; the player saw the previous pale reflection in the left eye. Both eyes and the tint need headset verification.
 
 - Add subtle edge-faded touch ripples and static edge chips to PDA glass; mapping, stereo and VR performance need headset checks.
 

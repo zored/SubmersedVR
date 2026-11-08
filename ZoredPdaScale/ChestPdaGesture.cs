@@ -22,7 +22,7 @@ namespace ZoredPdaScale
             if (action != GameInput.Button.PDA || __result || Plugin.ChestGesture == null || !Plugin.ChestGesture.Value) return;
             var player = Player.main;
             var pda = player == null ? null : player.GetPDA();
-            if (pda == null || (!pda.isInUse && Time.timeScale == 0f) || !ChestGestureRules.MayToggle(pda.isInUse, pda.isOpen, IngameMenu.main != null && IngameMenu.main.gameObject.activeInHierarchy) || !GameInput.GetButtonDown(GameInput.Button.MoveDown)) return;
+            if (pda == null || (!pda.isInUse && Time.timeScale == 0f) || !ChestGestureRules.MayToggle(pda.isInUse, pda.isOpen, IngameMenu.main != null && IngameMenu.main.gameObject.activeInHierarchy, GameInput.GetButtonHeld(GameInput.Button.MoveUp)) || !GameInput.GetButtonDown(GameInput.Button.MoveDown)) return;
             var rig = rigInstance == null ? null : rigInstance.GetValue(null);
             var controller = rig == null || leftController == null ? null : leftController.GetValue(rig) as GameObject;
             var head = MainCamera.camera;

@@ -28,7 +28,7 @@ namespace ZoredPdaScale
             capture = go.AddComponent<Camera>(); capture.enabled = false;
             for (int i=0; i<2; i++) { targets[i] = new RenderTexture(256,256,16,RenderTextureFormat.ARGB32); targets[i].name="PDA reflection " + i; targets[i].Create(); }
             commands = new CommandBuffer(); commands.name = "PDA reflected hand and head";
-            handMaterial = new Material(mask); handMaterial.color = new Color(.65f,.8f,.85f,.14f);
+            handMaterial = new Material(mask); handMaterial.color = new Color(.65f,.43f,.32f,.14f);
             headMaterial = new Material(mask); headMaterial.color = new Color(.25f,.35f,.4f,.09f);
             headMaterial.SetFloat("_HandRadius", 1f);
             headMesh = BuildHeadMesh();
@@ -86,7 +86,7 @@ namespace ZoredPdaScale
             foreach (var skin in hands) if (skin != null && skin.enabled && skin.gameObject.activeInHierarchy)
                 for (int j=0;j<skin.sharedMesh.subMeshCount;j++) commands.DrawRenderer(skin,handMaterial,j);
             commands.DrawMesh(headMesh,Matrix4x4.TRS(headCenter,source.transform.rotation,new Vector3(.09f,.115f,.085f)),headMaterial);
-            capture.CopyFrom(source); capture.enabled=false; capture.stereoTargetEye=StereoTargetEyeMask.None;
+            capture.CopyFrom(source); capture.renderingPath=RenderingPath.Forward; capture.enabled=false; capture.stereoTargetEye=StereoTargetEyeMask.None;
             capture.cullingMask=0; capture.clearFlags=CameraClearFlags.SolidColor; capture.backgroundColor=Color.clear;
             capture.RemoveAllCommandBuffers(); capture.AddCommandBuffer(CameraEvent.BeforeForwardOpaque,commands);
             bool old=GL.invertCulling;

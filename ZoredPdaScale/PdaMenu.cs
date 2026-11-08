@@ -15,9 +15,20 @@ namespace ZoredPdaScale
         private Transform parent;
         private Button template;
         private float nextLabelUpdate;
+        private readonly ReloadChordRules reloadChord = new ReloadChordRules();
 
         private void Update()
         {
+            var player = Player.main;
+            var pda = player == null ? null : player.GetPDA();
+            bool leftHeld = GameInput.GetButtonHeld(GameInput.Button.MoveDown);
+            bool rightHeld = GameInput.GetButtonHeld(GameInput.Button.MoveUp);
+            bool open = pda != null && pda.isInUse && pda.isOpen;
+            if (reloadChord.Step(open, leftHeld, rightHeld, Time.unscaledTime))
+            {
+                Debug.Log("Zored PDA: L1 + R1 reload requested");
+                StartCoroutine(ReloadScripts());
+            }
             if (parent == null) TryInstall();
             if (buttons.Count >= 2 && Time.unscaledTime >= nextLabelUpdate)
             {
